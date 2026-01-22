@@ -47,13 +47,18 @@ def parse_pet_ct_data(experiment_json, experiment_id, experiment_filter):
     
     try:
         data_fields = experiment_json['data_fields']
-        study_name = data_fields['dcmPatientId']
+        # if 'dcmPatientName' not in data_fields:
+        #     print(experiment_json)
+        study_name = data_fields['label']
 
         if experiment_filter and experiment_filter not in study_name:
             return []
 
         study_date = data_fields['date']
-        tracer_name = data_fields['tracer/name']
+        if 'tracer/name' in data_fields: 
+            tracer_name = data_fields['tracer/name']
+        else:
+            tracer_name = ''
         animal_weight = data_fields['dcmPatientWeight']
         tracer_dose = data_fields['tracer/dose']
         tracer_units = data_fields['tracer/dose/units']
@@ -64,6 +69,8 @@ def parse_pet_ct_data(experiment_json, experiment_id, experiment_filter):
         
         for scan in scans:
             scan_data_fields = scan['data_fields']
+            if 'modality' not in scan_data_fields:
+                continue
             modality = scan_data_fields['modality'].lower()
             if modality != 'pt' and modality != 'pet' and modality != 'ct':
                 continue
