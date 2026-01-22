@@ -42,7 +42,7 @@ def download_experiment_data_as_json(xnat_url, session, experiment_id):
         print(f"Error downloading XML for {experiment_id}: {e}")
         return None
 
-def parse_pet_ct_data(experiment_json, experiment_id, experiment_filter):
+def parse_pet_ct_data(experiment_json, experiment_id, experiment_filter, remove_splits):
     study_sheet_info = []
     
     try:
@@ -50,6 +50,8 @@ def parse_pet_ct_data(experiment_json, experiment_id, experiment_filter):
         study_name = data_fields['label']
 
         if experiment_filter and experiment_filter not in study_name:
+            return []
+        if remove_splits and 'split' not in study_name.lower():
             return []
 
         study_date = data_fields['date']
@@ -109,16 +111,13 @@ def parse_pet_ct_data(experiment_json, experiment_id, experiment_filter):
                 'Scanner': scanner_model
             }
             study_sheet_info.append(scan_info)
-        
-        if not study_sheet_info:
-            print(f"No PET/CT scans found in experiment {experiment_id}")
-            
+                    
     except Exception as e:
         print(f"Unexpected error processing {experiment_id}: {e}")
     
     return study_sheet_info
 
-def extract_project_data(xnat_url, session, project_id, output_csv, experiment_filter=None):
+def extract_project_data(xnat_url, session, project_id, output_csv, experiment_filter=None, remove_splits=False):
     print(f"Starting extraction for project: {project_id}")
     print("-" * 60)
     
@@ -135,7 +134,7 @@ def extract_project_data(xnat_url, session, project_id, output_csv, experiment_f
         
         experiment_json = download_experiment_data_as_json(xnat_url, session, exp_id)
         if experiment_json:
-            scan_data = parse_pet_ct_data(experiment_json, exp_id, experiment_filter)
+            scan_data = parse_pet_ct_data(experiment_json, exp_id, experiment_filter, remove_splits)
             all_scan_data.extend(scan_data)
     
     if all_scan_data:
@@ -161,6 +160,7 @@ def main():
     parser.add_argument('--project', required=True, help='XNAT project ID')
     parser.add_argument('--output', required=True, help='Output CSV filename')
     parser.add_argument('--filter', required=False, help='Input to customize what experiments are returned')
+    parser.add_argument('--removeSplits', required=False, help='Set to true if you wish to only retrieve split experiments.')
     args = parser.parse_args()
     
     xnat_url = args.url.rstrip('/')
@@ -170,7 +170,12 @@ def main():
     output_csv = args.output
     experiment_filter = args.filter
 
-    extract_project_data(xnat_url, session, project_id, output_csv, experiment_filter)
+    if args.removeSplits:
+        remove_splits = eval(args.removeSplits.capitalize())
+    else:
+        remove_splits = False
+
+    extract_project_data(xnat_url, session, project_id, output_csv, experiment_filter, remove_splits)
 
 if __name__ == '__main__':
     main()
