@@ -62,10 +62,26 @@ def parse_pet_ct_data(experiment_json, experiment_id, experiment_filter):
             animal_weight = data_fields['dcmPatientWeight']
         else:
             animal_weight = ''
-        tracer_dose = data_fields['tracer/dose']
-        tracer_units = data_fields['tracer/dose/units']
-        injection_time = data_fields['tracer/startTime']
-        scanner_model = data_fields['scanner/model']
+
+        if 'tracer/dose' in data_fields: 
+            tracer_dose = data_fields['tracer/dose']
+        else:
+            tracer_dose = ''
+
+        if 'tracer/dose/units' in data_fields: 
+            tracer_units = data_fields['tracer/dose/units']
+        else:
+            tracer_units = ''
+
+        if 'tracer/startTime' in data_fields: 
+            injection_time = data_fields['tracer/startTime']
+        else:
+            injection_time = ''
+
+        if 'scanner/model' in data_fields: 
+            scanner_model = data_fields['scanner/model']
+        else:
+            scanner_model = ''
                     
         scans = experiment_json['children'][0]['items']
         
@@ -83,6 +99,7 @@ def parse_pet_ct_data(experiment_json, experiment_id, experiment_filter):
             scan_info = {
                 'Study Name': study_name,
                 'Scan Name': scan_name,
+                'Modality': modality,
                 'Animal Weight': animal_weight,
                 'Tracer': tracer_name,
                 'Activity': '{} {}'.format(tracer_dose, tracer_units),
@@ -122,7 +139,7 @@ def extract_project_data(xnat_url, session, project_id, output_csv, experiment_f
             all_scan_data.extend(scan_data)
     
     if all_scan_data:
-        fieldnames = ['Study Name', 'Scan Name', 'Animal Weight', 'Tracer', 'Activity', 'Study Date', 'Scan Time', 'Injection Time', 'Scanner']
+        fieldnames = ['Study Name', 'Scan Name', 'Modality', 'Animal Weight', 'Tracer', 'Activity', 'Study Date', 'Scan Time', 'Injection Time', 'Scanner']
         
         with open(output_csv, 'w', newline='', encoding='utf-8') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
