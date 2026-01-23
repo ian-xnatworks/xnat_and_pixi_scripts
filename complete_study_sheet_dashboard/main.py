@@ -73,7 +73,7 @@ class App:
             st.markdown("*Create a complete study sheet based on PET/CT data within XNAT.*")
             
             with st.expander("Options", expanded=True):
-                self.input_prefix = st.multiselect("Experiment Prefix Filter", help='Experiment label must begin with this prefix to be included in study sheet.')
+                self.input_prefix = st.text_input("Experiment Prefix Filter", help='Experiment label must begin with this prefix to be included in study sheet.')
 
                 self.filter_splits = st.checkbox("Only Include Split Data", help='Set to true if you wish to only include split experiments.')
 
