@@ -33,7 +33,7 @@ class App:
         else:
             raise Exception('Must be started from an XNAT project.')
 
-        self._init_session_state()
+        self.init_session_state()
         self.init_ui()
 
     def init_session_state(self):
@@ -63,7 +63,7 @@ class App:
         """, unsafe_allow_html=True)
 
         # Initialize UI
-        self._init_sidebar()
+        self.init_options_sidebar()
 
 
     def init_options_sidebar(self):
