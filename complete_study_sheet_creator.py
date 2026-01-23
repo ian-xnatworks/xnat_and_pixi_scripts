@@ -5,7 +5,13 @@ import requests
 import csv
 import argparse
 import json
-        
+
+def extract_element_from_json_if_present(input_json, element_name):
+    if element_name in input_json:
+        return input_json[element_name]
+    else:
+        return ''
+    
 def get_project_experiments(xnat_url, session, project_id):
     url = f"{xnat_url}/data/projects/{project_id}/experiments"
     params = {'format': 'json'}
@@ -54,49 +60,31 @@ def parse_pet_ct_data(experiment_json, experiment_id, experiment_filter, remove_
         if remove_splits and 'split' not in study_name.lower():
             return []
 
-        study_date = data_fields['date']
-        if 'tracer/name' in data_fields: 
-            tracer_name = data_fields['tracer/name']
-        else:
-            tracer_name = ''
-
-        if 'dcmPatientWeight' in data_fields: 
-            animal_weight = data_fields['dcmPatientWeight']
-        else:
-            animal_weight = ''
-
-        if 'tracer/dose' in data_fields: 
-            tracer_dose = data_fields['tracer/dose']
-        else:
-            tracer_dose = ''
-
-        if 'tracer/dose/units' in data_fields: 
-            tracer_units = data_fields['tracer/dose/units']
-        else:
-            tracer_units = ''
-
-        if 'tracer/startTime' in data_fields: 
-            injection_time = data_fields['tracer/startTime']
-        else:
-            injection_time = ''
-
-        if 'scanner/model' in data_fields: 
-            scanner_model = data_fields['scanner/model']
-        else:
-            scanner_model = ''
+        study_date = extract_element_from_json_if_present(data_fields, 'date')
+        tracer_name = extract_element_from_json_if_present(data_fields, 'tracer/name')
+        animal_weight = extract_element_from_json_if_present(data_fields, 'dcmPatientWeight')
+        tracer_dose = extract_element_from_json_if_present(data_fields, 'tracer/dose')
+        tracer_units = extract_element_from_json_if_present(data_fields, 'tracer/dose/units')
+        injection_time = extract_element_from_json_if_present(data_fields, 'tracer/startTime')
+        scanner_model = extract_element_from_json_if_present(data_fields, 'scanner/model')
                     
         scans = experiment_json['children'][0]['items']
         
         for scan in scans:
             scan_data_fields = scan['data_fields']
+
             if 'modality' not in scan_data_fields:
                 continue
+            
             modality = scan_data_fields['modality'].lower()
             if modality != 'pt' and modality != 'pet' and modality != 'ct':
                 continue
-            
+
+            if 'type' not in scan_data_fields:
+                continue
             scan_name = scan_data_fields['type']
-            scan_time = scan_data_fields['startTime']
+
+            scan_time = extract_element_from_json_if_present(scan_data_fields, 'startTime')
 
             scan_info = {
                 'Study Name': study_name,
