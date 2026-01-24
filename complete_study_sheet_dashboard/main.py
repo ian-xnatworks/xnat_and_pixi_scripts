@@ -125,7 +125,6 @@ class App:
             #     st.write(experiment_json['children'])
             # with self.main:
             #     st.write(experiment_json['children'][0])
-            # scans = experiment_json['children'][0]['items']
 
             # with self.main:
             #     st.write(scans)
@@ -138,6 +137,8 @@ class App:
             injection_time = self.extract_element_from_json_if_present(data_fields, 'tracer/startTime')
             scanner_model = self.extract_element_from_json_if_present(data_fields, 'scanner/model')
             
+            scans = experiment_json['children'][0]['items']
+
             for scan in scans:
                 scan_data_fields = scan['data_fields']
 
