@@ -67,7 +67,6 @@ class App:
         self.init_options_sidebar()
         self.init_main_section()
 
-
     def init_options_sidebar(self):
         # Streamlit setup
         with st.sidebar:
@@ -89,9 +88,6 @@ class App:
 
     def init_main_section(self):
         self.main = st.container()
-
-        with self.main:
-            st.write("Please set your optional parameters then click 'Create Sheet.'")
     
     def download_experiment_data_as_json(self, experiment_id):
         url = f"/data/experiments/{experiment_id}?format=json"
@@ -116,7 +112,12 @@ class App:
             data_fields = experiment_json['data_fields']
             study_name = data_fields['label']
 
+            with self.main:
+                st.write(experiment_filter)
+
             if experiment_filter and experiment_filter not in study_name:
+                with self.main:
+                    st.write(experiment_id + " does not fit")
                 return []
             if remove_splits and 'split' not in study_name.lower():
                 return []
