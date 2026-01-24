@@ -181,8 +181,12 @@ class App:
         for i, experiment in enumerate(experiments, 1):
             exp_id = experiment.id
             experiment_json = self.download_experiment_data_as_json(exp_id)
+            with self.main:
+                st.write(experiment_json)
             if experiment_json:
                 scan_data = self.parse_pet_ct_data(experiment_json, exp_id, experiment_filter, remove_splits)
+                with self.main:
+                    st.write(scan_data)
                 all_scan_data.extend(scan_data)
         
         if all_scan_data:
