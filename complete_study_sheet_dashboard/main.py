@@ -93,11 +93,10 @@ class App:
             st.write("This is inside the container")
     
     def download_experiment_data_as_json(self, experiment_id):
-        url = f"/data/experiments/{experiment_id}"
-        params = {'format': 'json'}
+        url = f"/data/experiments/{experiment_id}?format=json"
         
         try:
-            response = self._connection.get(url, params=params)
+            response = self._connection.get(url)
             data = response.json()
             if 'items' in data:
                 data_items = data['items'][0]
