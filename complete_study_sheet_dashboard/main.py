@@ -3,6 +3,7 @@ PIXI complete study sheet creator
 """
 import os
 import streamlit as st
+import pandas as pd
 import xnat
 import requests
 import csv
