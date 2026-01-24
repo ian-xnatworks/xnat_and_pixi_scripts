@@ -128,8 +128,12 @@ class App:
             tracer_units = extract_element_from_json_if_present(data_fields, 'tracer/dose/units')
             injection_time = extract_element_from_json_if_present(data_fields, 'tracer/startTime')
             scanner_model = extract_element_from_json_if_present(data_fields, 'scanner/model')
-                        
-            scans = experiment_json['children']
+            
+            with self.main:
+                st.write(experiment_json['children'])
+            with self.main:
+                st.write(experiment_json['children'][0])
+            scans = experiment_json['children'][0]['items']
 
             with self.main:
                 st.write(scans)
@@ -186,8 +190,6 @@ class App:
         for i, experiment in enumerate(experiments, 1):
             exp_id = experiment.id
             experiment_json = self.download_experiment_data_as_json(exp_id)
-            with self.main:
-                st.write(experiment_json)
             if experiment_json:
                 scan_data = self.parse_pet_ct_data(experiment_json, exp_id, experiment_filter, remove_splits)
                 with self.main:
