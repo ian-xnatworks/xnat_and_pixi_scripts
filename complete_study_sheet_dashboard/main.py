@@ -112,14 +112,14 @@ class App:
         
         try:
             data_fields = experiment_json['data_fields']
-            with self.main:
-                st.write(data_fields)
             study_name = data_fields['label']
 
             if experiment_filter and experiment_filter not in study_name:
                 return []
             if remove_splits and 'split' not in study_name.lower():
                 return []
+            with self.main:
+                st.write(data_fields)
 
             study_date = extract_element_from_json_if_present(data_fields, 'date')
             tracer_name = extract_element_from_json_if_present(data_fields, 'tracer/name')
@@ -129,7 +129,7 @@ class App:
             injection_time = extract_element_from_json_if_present(data_fields, 'tracer/startTime')
             scanner_model = extract_element_from_json_if_present(data_fields, 'scanner/model')
                         
-            scans = experiment_json['children'][0]['items']
+            scans = experiment_json['children']
 
             with self.main:
                 st.write(scans)
