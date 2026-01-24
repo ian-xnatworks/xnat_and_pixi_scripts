@@ -174,6 +174,9 @@ class App:
             return
         
         all_scan_data = []
+
+        with self.main:
+            st.write(experiments)
         
         for i, experiment in enumerate(experiments, 1):
             exp_id = experiment.id
