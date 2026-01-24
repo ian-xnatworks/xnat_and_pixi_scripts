@@ -104,7 +104,8 @@ class App:
                 return data_items
             
         except requests.exceptions.RequestException as e:
-            print(f"Error downloading XML for {experiment_id}: {e}")
+            with self.main:
+                st.write(f"Error downloading XML for {experiment_id}: {e}")
             return None
 
     def parse_pet_ct_data(self, experiment_json, experiment_id, experiment_filter, remove_splits):
@@ -118,16 +119,6 @@ class App:
                 return []
             if remove_splits and 'split' not in study_name.lower():
                 return []
-            # with self.main:
-            #     st.write(data_fields)
-
-            # with self.main:
-            #     st.write(experiment_json['children'])
-            # with self.main:
-            #     st.write(experiment_json['children'][0])
-
-            # with self.main:
-            #     st.write(scans)
 
             study_date = self.extract_element_from_json_if_present(data_fields, 'date')
             tracer_name = self.extract_element_from_json_if_present(data_fields, 'tracer/name')
@@ -181,13 +172,11 @@ class App:
         experiments = self._project.experiments.values()
         
         if not experiments:
-            print("No experiments found. Exiting.")
+            with self.main:
+                st.write(f"No experiments found. Exiting.")
             return
         
         all_scan_data = []
-
-        with self.main:
-            st.write(experiments)
         
         for i, experiment in enumerate(experiments, 1):
             exp_id = experiment.id
@@ -200,16 +189,15 @@ class App:
         
         if all_scan_data:
             fieldnames = ['Study Name', 'Scan Name', 'Modality', 'Animal Weight', 'Tracer', 'Activity', 'Study Date', 'Scan Time', 'Injection Time', 'Scanner']
-            
-            with self.main:
-                st.write(all_scan_data)
+            df = pd.DataFrame.from_dict(all_scan_data)
+            st.dataframe(df, height=600)
             # with open(output_csv, 'w', newline='', encoding='utf-8') as csvfile:
             #     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             #     writer.writeheader()
             #     writer.writerows(all_scan_data)
             
         else:
-            print("No PET/CT scan data found in project")
-
+            with self.main:
+                st.write(f"No PET/CT scan data found in project")
 
 app = App()
