@@ -118,25 +118,25 @@ class App:
                 return []
             if remove_splits and 'split' not in study_name.lower():
                 return []
-            with self.main:
-                st.write(data_fields)
+            # with self.main:
+            #     st.write(data_fields)
 
-            with self.main:
-                st.write(experiment_json['children'])
-            with self.main:
-                st.write(experiment_json['children'][0])
-            scans = experiment_json['children'][0]['items']
+            # with self.main:
+            #     st.write(experiment_json['children'])
+            # with self.main:
+            #     st.write(experiment_json['children'][0])
+            # scans = experiment_json['children'][0]['items']
 
-            with self.main:
-                st.write(scans)
+            # with self.main:
+            #     st.write(scans)
 
-            study_date = extract_element_from_json_if_present(data_fields, 'date')
-            tracer_name = extract_element_from_json_if_present(data_fields, 'tracer/name')
-            animal_weight = extract_element_from_json_if_present(data_fields, 'dcmPatientWeight')
-            tracer_dose = extract_element_from_json_if_present(data_fields, 'tracer/dose')
-            tracer_units = extract_element_from_json_if_present(data_fields, 'tracer/dose/units')
-            injection_time = extract_element_from_json_if_present(data_fields, 'tracer/startTime')
-            scanner_model = extract_element_from_json_if_present(data_fields, 'scanner/model')
+            study_date = self.extract_element_from_json_if_present(data_fields, 'date')
+            tracer_name = self.extract_element_from_json_if_present(data_fields, 'tracer/name')
+            animal_weight = self.extract_element_from_json_if_present(data_fields, 'dcmPatientWeight')
+            tracer_dose = self.extract_element_from_json_if_present(data_fields, 'tracer/dose')
+            tracer_units = self.extract_element_from_json_if_present(data_fields, 'tracer/dose/units')
+            injection_time = self.extract_element_from_json_if_present(data_fields, 'tracer/startTime')
+            scanner_model = self.extract_element_from_json_if_present(data_fields, 'scanner/model')
             
             for scan in scans:
                 scan_data_fields = scan['data_fields']
@@ -152,7 +152,7 @@ class App:
                     continue
                 scan_name = scan_data_fields['type']
 
-                scan_time = extract_element_from_json_if_present(scan_data_fields, 'startTime')
+                scan_time = self.extract_element_from_json_if_present(scan_data_fields, 'startTime')
 
                 scan_info = {
                     'Study Name': study_name,
