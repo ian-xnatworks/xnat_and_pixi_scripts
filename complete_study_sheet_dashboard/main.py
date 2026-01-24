@@ -99,8 +99,6 @@ class App:
             response = self._connection.get(url)
             data = response.json()
             if 'items' in data:
-                with self.main:
-                    st.write(data)
                 data_items = data['items'][0]
                 response.raise_for_status()
                 return data_items
@@ -114,6 +112,8 @@ class App:
         
         try:
             data_fields = experiment_json['data_fields']
+            with self.main:
+                st.write(data_fields)
             study_name = data_fields['label']
 
             if experiment_filter and experiment_filter not in study_name:
@@ -130,6 +130,9 @@ class App:
             scanner_model = extract_element_from_json_if_present(data_fields, 'scanner/model')
                         
             scans = experiment_json['children'][0]['items']
+
+            with self.main:
+                st.write(scans)
             
             for scan in scans:
                 scan_data_fields = scan['data_fields']
