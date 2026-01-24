@@ -188,7 +188,6 @@ class App:
                 all_scan_data.extend(scan_data)
         
         if all_scan_data:
-            self.main = st.empty()
             df = pd.DataFrame.from_dict(all_scan_data)
             st.dataframe(df, height=600)            
         else:
