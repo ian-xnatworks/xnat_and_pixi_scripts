@@ -93,7 +93,7 @@ class App:
             st.write("This is inside the container")
     
     def download_experiment_data_as_json(self, experiment_id):
-        url = f"{xnat_url}/data/experiments/{experiment_id}"
+        url = f"/data/experiments/{experiment_id}"
         params = {'format': 'json'}
         
         try:
