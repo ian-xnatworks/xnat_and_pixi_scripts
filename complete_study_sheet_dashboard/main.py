@@ -99,6 +99,8 @@ class App:
             response = self._connection.get(url)
             data = response.json()
             if 'items' in data:
+                with self.main:
+                    st.write(data)
                 data_items = data['items'][0]
                 response.raise_for_status()
                 return data_items
