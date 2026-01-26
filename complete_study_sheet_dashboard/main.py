@@ -65,7 +65,7 @@ class App:
 
         # Initialize UI
         self.init_options_sidebar()
-        self.init_main_section()
+        self.init_main_section()        
 
     def init_options_sidebar(self):
         # Streamlit setup
@@ -74,7 +74,7 @@ class App:
             st.markdown("*Create a complete study sheet based on PET/CT data within an XNAT project.*")
             
             with st.expander("Options", expanded=True):
-                self.input_prefix = st.text_input("Experiment Prefix Filter", help='Experiment label must begin with this prefix to be included in study sheet.')
+                st.text_input("Experiment Prefix Filter", help='Experiment label must begin with this prefix to be included in study sheet.', key= 'input_prefix')
 
                 self.filter_splits = st.checkbox("Only Include Split Data", help='Set to true if you wish to only include split experiments.')
 
@@ -169,7 +169,7 @@ class App:
         return study_sheet_info
 
     def extract_project_data(self):
-        experiment_filter = self.input_prefix
+        experiment_filter = st.session_state.input_prefix
         remove_splits = self.filter_splits
         experiments = self._project.experiments.values()
         
