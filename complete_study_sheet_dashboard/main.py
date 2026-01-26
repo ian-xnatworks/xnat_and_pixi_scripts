@@ -187,6 +187,6 @@ class App:
             st.dataframe(df, height=600)            
         else:
             with self.main:
-                st.write(f"No PET/CT scan data found in project")
+                st.write(f"No PET/CT scan data found within the project with the given requirements.")
 
 app = App()
