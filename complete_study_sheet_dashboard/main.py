@@ -36,7 +36,7 @@ class App:
             raise Exception('Must be started from an XNAT project.')
 
         url = "/xapi/siteConfig/uiDateFormat"
-        self.date_format = self._connection.get(url)
+        self.date_format = self._connection.get(url).json()
 
         self.init_session_state()
         self.init_ui()
