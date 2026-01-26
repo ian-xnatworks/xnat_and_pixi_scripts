@@ -128,12 +128,8 @@ class App:
 
             if st.session_state.filter_date:
                 start_date = st.session_state.study_date_range_start
-                end_date = st.session_state.study_date_range_start
+                end_date = st.session_state.study_date_range_end
                 study_date_datetime = datetime.strptime(study_date, '%Y-%m-%d').date()
-                with self.main:
-                    st.write(str(study_date_datetime) + "  " + str(start_date) + "  " + str(end_date))
-                    st.write(start_date > study_date_datetime)
-                    st.write(end_date < study_date_datetime)
                 if start_date > study_date_datetime or end_date < study_date_datetime:
                     return []
             
