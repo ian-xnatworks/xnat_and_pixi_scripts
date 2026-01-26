@@ -70,6 +70,8 @@ class App:
 
     def enable_date_inputs(self):
         st.session_state.datetimes_disabled = not st.session_state.datetimes_disabled
+        with self.main:
+            st.write(st.session_state.datetimes_disabled)
 
     def init_options_sidebar(self):
         # Streamlit setup
@@ -87,7 +89,7 @@ class App:
 
                 st.date_input("Study date range start", datetime.today(), help='Beginning of date range to filter scans', key='study_date_range_start', disabled=st.session_state.datetimes_disabled)
 
-                st.date_input("Study date range end", datetime.today(), help='End of date range to filter scans', key='study_date_range_end', disabled=True)
+                st.date_input("Study date range end", datetime.today(), help='End of date range to filter scans', key='study_date_range_end', disabled=st.session_state.datetimes_disabled)
 
             st.button("Create Sheet", on_click=self.extract_project_data)
 
