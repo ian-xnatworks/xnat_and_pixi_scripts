@@ -68,11 +68,6 @@ class App:
         self.init_options_sidebar()
         self.init_main_section()
 
-    def enable_date_inputs(self):
-        st.session_state.datetimes_disabled = not st.session_state.datetimes_disabled
-        with self.main:
-            st.write(st.session_state.datetimes_disabled)
-
     def init_options_sidebar(self):
         # Streamlit setup
         with st.sidebar:
@@ -84,12 +79,14 @@ class App:
 
                 st.checkbox("Only Include Split Data", help='Set to true if you wish to only include split experiments.', key= 'filter_splits')
 
-                st.session_state.datetimes_disabled = True
-                st.checkbox("Filter Date", help='Set to true if you wish to filter scans based on their study date.', key= 'filter_date', on_change=self.enable_date_inputs)
+                st.checkbox("Filter Date", help='Set to true if you wish to filter scans based on their study date.', key= 'filter_date')
 
-                st.date_input("Study date range start", datetime.today(), help='Beginning of date range to filter scans', key='study_date_range_start', disabled=st.session_state.datetimes_disabled)
+                if st.session_state.get("filter_date", False):
+                    st.session_state.datetimes_disabled = False
 
-                st.date_input("Study date range end", datetime.today(), help='End of date range to filter scans', key='study_date_range_end', disabled=st.session_state.datetimes_disabled)
+                st.date_input("Study date range start", datetime.today(), help='Beginning of date range to filter scans', key='study_date_range_start', disabled=st.session_state.get("datetimes_disabled", True))
+
+                st.date_input("Study date range end", datetime.today(), help='End of date range to filter scans', key='study_date_range_end', disabled=st.session_state.get("datetimes_disabled", True))
 
             st.button("Create Sheet", on_click=self.extract_project_data)
 
