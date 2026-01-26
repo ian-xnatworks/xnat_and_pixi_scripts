@@ -69,7 +69,7 @@ class App:
         self.init_main_section()
 
     def enable_date_inputs(self):
-        streamlit.session_state.datetimes_disabled = !streamlit.session_state.datetimes_disabled
+        st.session_state.datetimes_disabled = not st.session_state.datetimes_disabled
 
     def init_options_sidebar(self):
         # Streamlit setup
@@ -82,7 +82,7 @@ class App:
 
                 st.checkbox("Only Include Split Data", help='Set to true if you wish to only include split experiments.', key= 'filter_splits')
 
-                streamlit.session_state.datetimes_disabled = True
+                st.session_state.datetimes_disabled = True
                 st.checkbox("Filter Date", help='Set to true if you wish to filter scans based on their study date.', key= 'filter_date', on_change=self.enable_date_inputs)
 
                 st.date_input("Study date range start", datetime.today(), help='Beginning of date range to filter scans', key='study_date_range_start', disabled=streamlit.session_state.datetimes_disabled)
