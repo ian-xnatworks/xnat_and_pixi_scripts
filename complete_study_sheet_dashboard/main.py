@@ -127,8 +127,8 @@ class App:
             study_date = self.extract_element_from_json_if_present(data_fields, 'date')
 
             if st.session_state.filter_date:
-                start_date = datetime.strptime(st.session_state.study_date_range_start, '%Y-%m-%d').date()
-                end_date = datetime.strptime(st.session_state.study_date_range_start, '%Y-%m-%d').date()
+                start_date = st.session_state.study_date_range_start
+                end_date = st.session_state.study_date_range_start
                 study_date_datetime = datetime.strptime(study_date, '%Y-%m-%d').date()
                 if start_date > study_date_datetime or end_date < study_date_datetime:
                     return []
