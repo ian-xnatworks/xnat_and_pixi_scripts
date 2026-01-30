@@ -1,5 +1,5 @@
 """
-PIXI complete study sheet creator
+Jupyter dashboard to create complete study report for PET/CT data within PIXI XNAT
 """
 import os
 import streamlit as st
@@ -64,7 +64,6 @@ class App:
             </style>
         """, unsafe_allow_html=True)
 
-        # Initialize UI
         self.init_options_sidebar()
         self.init_main_section()
 
@@ -74,21 +73,18 @@ class App:
     def init_options_sidebar(self):
         # Streamlit setup
         with st.sidebar:
-            st.title("Complete Study Sheet Builder")
-            st.markdown("*Create a complete study sheet based on PET/CT data within an XNAT project.*")
+            st.title("Complete Study Report Builder")
+            st.markdown("*Create a complete study report based on PET/CT data within an XNAT project.*")
             
             with st.expander("Options", expanded=True):
-                st.text_input("Experiment Prefix Filter", help='Experiment label must begin with this prefix to be included in study sheet.', key= 'input_prefix')
-
+                st.text_input("Experiment Prefix Filter", help='Experiment label must begin with this prefix to be included in study report.', key= 'input_prefix')
                 st.checkbox("Only Include Split Data", help='Set to true if you wish to only include split experiments.', key= 'filter_splits')
-
+                st.multiselect("Filter Modality", ['CT', 'PET'], default=[], help='Choose to only show single modailty within report',key='filter_modality')
                 st.checkbox("Filter Date", help='Set to true if you wish to filter scans based on their study date.', key= 'filter_date', on_change=self.disable)
-
                 st.date_input("Study date range start", datetime.today(), help='Beginning of date range to filter scans', key='study_date_range_start', disabled=st.session_state.get("datetimes_disabled", True))
-
                 st.date_input("Study date range end", datetime.today(), help='End of date range to filter scans', key='study_date_range_end', disabled=st.session_state.get("datetimes_disabled", True))
 
-            st.button("Create Sheet", on_click=self.extract_project_data)
+            st.button("Create Report", on_click=self.extract_project_data)
 
     def extract_element_from_json_if_present(self, input_json, element_name):
         if element_name in input_json:
@@ -151,9 +147,15 @@ class App:
                 if 'modality' not in scan_data_fields:
                     continue
                 
-                modality = scan_data_fields['modality'].lower()
-                if modality != 'pt' and modality != 'pet' and modality != 'ct':
+                modality = scan_data_fields['modality'].upper()
+                if modality != 'PT' and modality != 'PET' and modality != 'CT':
                     continue
+                elif modality == 'PT':
+                    modality = 'PET'
+
+                if st.session_state.filter_modality:
+                    if modality not in st.session_state.filter_modality:
+                        continue
 
                 if 'type' not in scan_data_fields:
                     continue
@@ -167,7 +169,7 @@ class App:
                     'Modality': modality,
                     'Animal Weight': animal_weight,
                     'Tracer': tracer_name,
-                    'Activity': '{} {}'.format(tracer_dose, tracer_units),
+                    'Injected Dose': '{} {}'.format(tracer_dose, tracer_units),
                     'Study Date': study_date,
                     'Scan Time': scan_time,
                     'Injection Time': injection_time,
