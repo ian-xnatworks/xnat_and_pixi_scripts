@@ -144,6 +144,9 @@ class App:
             for scan in scans:
                 scan_data_fields = scan['data_fields']
 
+                with self.main:
+                    st.write(f"Modality: " + modality)
+
                 if 'modality' not in scan_data_fields:
                     continue
                 
