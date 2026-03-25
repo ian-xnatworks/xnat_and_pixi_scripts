@@ -142,6 +142,10 @@ class App:
             scans = experiment_json['children'][0]['items']
 
             for scan in scans:
+                if 'data_fields' not in scan.keys():
+                    continue
+                scan_data_fields = scan['data_fields']
+
                 if 'modality' not in scan_data_fields:
                     continue
                 
@@ -150,8 +154,6 @@ class App:
                     continue
                 elif modality == 'PT':
                     modality = 'PET'
-                
-                scan_data_fields = scan['data_fields']
 
                 if st.session_state.filter_modality:
                     if modality not in st.session_state.filter_modality:
