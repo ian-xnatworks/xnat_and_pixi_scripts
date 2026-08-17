@@ -53,9 +53,9 @@ class App:
                 st.session_state.subject_ids.append(subject.id)
 
         if 'experiment_ids' not in st.session_state:
-        st.session_state.experiment_ids = []
-        for experiment in self.project.experiments.values():
-            st.session_state.subject_ids.append(experiment.id)
+            st.session_state.experiment_ids = []
+            for experiment in self.project.experiments.values():
+                st.session_state.subject_ids.append(experiment.id)
 
     def init_ui(self):
         # Hide streamlit deploy button
