@@ -50,15 +50,15 @@ class App:
         if 'subjects' not in st.session_state:
             st.session_state.subjects = self.project.subjects.values()
 
-        if 'subject_ids' not in st.session_state:
-            st.session_state.subject_ids = []
+        if 'subject_labels' not in st.session_state:
+            st.session_state.subject_labels = []
             for subject in st.session_state.subjects:
-                st.session_state.subject_ids.append(subject.id)
+                st.session_state.subject_labels.append(subject.label)
 
-        if 'experiment_ids' not in st.session_state:
-            st.session_state.experiment_ids = []
+        if 'experiment_labels' not in st.session_state:
+            st.session_state.experiment_labels = []
             for experiment in self.project.experiments.values():
-                st.session_state.subject_ids.append(experiment.id)
+                st.session_state.experiment_labels.append(experiment.label)
 
     def init_ui(self):
         # Hide streamlit deploy button
@@ -92,10 +92,10 @@ class App:
             
             with st.expander("Options", expanded=True):
                 st.checkbox("Limit to Subjects", help='Set to true if you wish to limit the output to certain subjects.', key= 'limit_to_subjects', on_change=self.set_limit_to_subjects)
-                st.multiselect("Filter Subjects", [st.session_state.subject_ids], default=[], help='Set which subjects will be used to make the output.',key='filter_subjects', disabled=st.session_state.get("subject_filter_on", True))
+                st.multiselect("Filter Subjects", st.session_state.subject_labels, default=[], help='Set which subjects will be used to make the output.',key='filter_subjects', disabled=st.session_state.get("subject_filter_on", True))
 
                 st.checkbox("Limit to Experiments", help='Set to true if you wish to limit the output to certain experiments.', key= 'limit_to_experiments', on_change=self.set_limit_to_experiments)
-                st.multiselect("Filter Experiments", [st.session_state.experiment_ids], default=[], help='Set which experiments will be used to make the output.',key='filter_experiments', disabled=st.session_state.get("experiment_filter_on", True))
+                st.multiselect("Filter Experiments", st.session_state.experiment_labels, default=[], help='Set which experiments will be used to make the output.',key='filter_experiments', disabled=st.session_state.get("experiment_filter_on", True))
 
                 st.multiselect("Filter Assessment Type", ['lightFalloff', 'pulseSnr', 'pulsatility', 'motion', 'mapQuality'], default=[], help='Choose to only include certain assessment types in the report.',key='filter_assessment_type')
 
