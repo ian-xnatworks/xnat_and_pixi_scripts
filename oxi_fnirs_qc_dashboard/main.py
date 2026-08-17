@@ -50,7 +50,7 @@ class App:
         if 'subject_ids' not in st.session_state:
             st.session_state.subject_ids = []
             for subject in st.session_state.subjects:
-            st.session_state.subject_ids.append(subject.id)
+                st.session_state.subject_ids.append(subject.id)
 
         if 'experiment_ids' not in st.session_state:
         st.session_state.experiment_ids = []
