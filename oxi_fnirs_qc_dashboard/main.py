@@ -35,6 +35,9 @@ class App:
         else:
             raise Exception('Must be started from an XNAT project.')
 
+        self.init_session_state()
+        self.init_ui()
+
     def init_session_state(self):
         # Initialize streamlit session state
         # Values will be populated later
@@ -70,6 +73,7 @@ class App:
                 #stDecoration {display:none;}
             </style>
         """, unsafe_allow_html=True)
+        self.init_options_sidebar()
 
     def set_limit_to_subjects(self):
         st.session_state.subject_filter_on = not st.session_state.limit_to_subjects
