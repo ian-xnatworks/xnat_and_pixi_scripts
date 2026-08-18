@@ -196,7 +196,7 @@ class App:
         if assessment_type not in data_fields_element:
             return
         
-        if filter_assessment_type and assessment_type not in filter_assessment_type:
+        if st.session_state.filter_assessment_type and assessment_type not in st.session_state.filter_assessment_type:
             return
 
         assessment_json['score'] = data_fields_element[assessment_type]
