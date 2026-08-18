@@ -243,7 +243,7 @@ class App:
                             'Assessment': assessment_type,
                             'Score': score
                         }
-                    list_of_csv_elements.append(row_info)
+                        list_of_csv_elements.append(row_info)
         return list_of_csv_elements
 
 def clean_scan_name_for_scan_type(scan_name):
