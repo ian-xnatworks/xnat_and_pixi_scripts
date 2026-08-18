@@ -47,7 +47,7 @@ class App:
                 self.experiment = self.connection.sessions[self.session_id]
                 base_element = self.experiment
             except Exception as e:
-                raise Exception(f'Error connecting to subject {(os.environ.get('XNAT_ITEM_ID'))}', e)
+                raise Exception(f'Error connecting to subject {(os.environ.get("XNAT_ITEM_ID"))}', e)
 
         if base_element == None:
             raise Exception("Unable to locate base element for Jupyter Dashboard.")
