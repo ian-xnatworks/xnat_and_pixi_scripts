@@ -35,6 +35,7 @@ class App:
         else:
             raise Exception('Must be started from an XNAT project.')
 
+        self.json_outline = self.create_full_structure_json()
         self.init_session_state()
         self.init_ui()
 
@@ -52,13 +53,9 @@ class App:
 
         if 'subject_labels' not in st.session_state:
             st.session_state.subject_labels = []
-            for subject in st.session_state.subjects:
-                st.session_state.subject_labels.append(subject.label)
 
         if 'experiment_labels' not in st.session_state:
             st.session_state.experiment_labels = []
-            for experiment in self.project.experiments.values():
-                st.session_state.experiment_labels.append(experiment.label)
 
     def init_ui(self):
         # Hide streamlit deploy button
@@ -110,8 +107,8 @@ class App:
         self.main = st.container()
 
     def create_table(self):
-        json_outline = self.create_full_structure_json(st.session_state.project)
-        csv_elements = convert_json_into_csv(json_outline)
+        json_outline = self.json_outline
+        csv_elements = self.convert_json_into_csv(json_outline)
 
         if csv_elements:
             df = pd.DataFrame.from_dict(csv_elements)
@@ -120,15 +117,14 @@ class App:
             with self.main:
                 st.write(f"No fNIRS data found within the project.")
 
-    def create_full_structure_json(self, project):
-        subjects = project.subjects.values()
+    def create_full_structure_json(self):
+        subjects = self.project.subjects.values()
+        subjects_with_fnirs = []
+        experiments_with_fnirs = []
 
         subject_json_list = []
 
         for subject in subjects:
-            if st.session_state.limit_to_subjects and subject.label not in st.session_state.subject_labels:
-                continue
-
             subject_has_fnirs_qc_data = False
             subject_json = {}
             subject_json['id'] = subject.id
@@ -138,10 +134,8 @@ class App:
             experiments = subject.experiments.values()
 
             for experiment in experiments:
-                if st.session_state.limit_to_experiments and experiment.label not in st.session_state.experiment_labels:
-                    continue
-
                 if experiment.__xsi_type__ == 'fnirs:fnirsSessionData':
+                    experiment_has_fnirs_qc_data = False
                     experiment_json = {}
                     experiment_json['id'] = experiment.id
                     experiment_json['label'] = experiment.label
@@ -161,7 +155,13 @@ class App:
                             if scan_assessor['meta']['xsi:type'] != 'fnirs:fnirsQcScanData':
                                 continue
 
-                            subject_has_fnirs_qc_data = True
+                            if subject_has_fnirs_qc_data == False:
+                                subject_has_fnirs_qc_data = True
+                                subjects_with_fnirs.append(subject.label)
+                            if experiment_has_fnirs_qc_data == False:
+                                experiment_has_fnirs_qc_data = True
+                                experiments_with_fnirs.append(experiment.label)
+
                             data_fields = scan_assessor['data_fields']
                             scan_json = scan_id_to_scan_json_dict[data_fields['imageScan_ID']]
                             
@@ -171,76 +171,84 @@ class App:
                             motion_assessment_json = self.create_assessment_json(scan_json, 'motion', data_fields, assessor.rater, scan_assessor['meta']['start_date'])
                             mapQuality_assessment_json = self.create_assessment_json(scan_json, 'mapQuality', data_fields, assessor.rater, scan_assessor['meta']['start_date'])
                     
-                    experiment_json['scans'] = list(scan_id_to_scan_json_dict.values())
-                    subject_experiment_jsons.append(experiment_json)
+                    if experiment_has_fnirs_qc_data:
+                        experiment_json['scans'] = list(scan_id_to_scan_json_dict.values())
+                        subject_experiment_jsons.append(experiment_json)
             if subject_has_fnirs_qc_data:
                 subject_json['sessions'] = subject_experiment_jsons
                 subject_json_list.append(subject_json)
 
+        st.session_state.subject_labels = subjects_with_fnirs
+        st.session_state.experiment_labels = experiments_with_fnirs
         return subject_json_list
 
     def create_assessment_json(self, scan_json, assessment_type, data_fields_element, rater, datetime):
         assessment_json = {}
         assessment_json['rater'] = rater
-
-        if st.session_state.filter_date:
-            start_date = st.session_state.assessment_date_range_start
-            end_date = st.session_state.assessment_date_range_end
-            assessment_date_datetime = datetime.strptime(datetime, '%Y-%m-%d').date()
-            if start_date > assessment_date_datetime or end_date < assessment_date_datetime:
-                return
-
         assessment_json['date'] = datetime
         assessment_json['type'] = assessment_type
 
         if assessment_type not in data_fields_element:
             return
-        
-        if st.session_state.filter_assessment_type and assessment_type not in st.session_state.filter_assessment_type:
-            return
 
         assessment_json['score'] = data_fields_element[assessment_type]
         scan_json['assessments'].append(assessment_json)
+
+    def convert_json_into_csv(self, json_list):
+        list_of_csv_elements = []
+
+        for subject in json_list:
+            if st.session_state.limit_to_subjects and subject['label'] not in st.session_state.subject_labels:
+                continue
+
+            subject_id = subject['id']
+            subject_label = subject['label']
+
+            for experiment in subject['sessions']:
+                if st.session_state.limit_to_experiments and experiment['label'] not in st.session_state.experiment_labels:
+                    continue
+
+                experiment_id = experiment['id']
+                experiment_label = experiment['label']
+
+                for scan in experiment['scans']:
+                    scan_id = scan['id']
+                    scan_type = scan['type']
+
+                    for assessment in scan['assessments']:
+                        rater = assessment['rater']
+                        assessment_date = assessment['date']
+                        assessment_type = assessment['type']
+                        score = assessment['score']
+
+                        if st.session_state.filter_date:
+                            start_date = st.session_state.assessment_date_range_start
+                            end_date = st.session_state.assessment_date_range_end
+                            assessment_date_datetime = datetime.strptime(assessment_date, '%Y-%m-%d').date()
+                            if start_date > assessment_date_datetime or end_date < assessment_date_datetime:
+                                continue
+
+                        if st.session_state.filter_assessment_type and assessment_type not in st.session_state.filter_assessment_type:
+                            continue
+
+                        row_info = {
+                            'Subject ID': subject_id,
+                            'Subject Label': subject_label,
+                            'Experiment ID': experiment_id,
+                            'Experiment Label': experiment_label,
+                            'Scan ID': scan_id,
+                            'Scan Type': scan_type,
+                            'Rater': rater,
+                            'Assessment Date': assessment_date,
+                            'Assessment': assessment_type,
+                            'Score': score
+                        }
+                        list_of_csv_elements.append(row_info)
+        return list_of_csv_elements
 
 def clean_scan_name_for_scan_type(scan_name):
         non_letters_removed = re.sub(r'[^\w]|[\d_]', '', scan_name)
         scan_substring_removed = re.sub(r'scan', '', non_letters_removed, flags=re.IGNORECASE)
         return scan_substring_removed
-
-def convert_json_into_csv(json_list):
-    list_of_csv_elements = []
-
-    for subject in json_list:
-        subject_id = subject['id']
-        subject_label = subject['id']
-
-        for experiment in subject['sessions']:
-            experiment_id = experiment['id']
-            experiment_label = experiment['label']
-
-            for scan in experiment['scans']:
-                scan_id = scan['id']
-                scan_type = scan['type']
-
-                for assessment in scan['assessments']:
-                    rater = assessment['rater']
-                    assessment_date = assessment['date']
-                    assessment_type = assessment['type']
-                    score = assessment['score']
-
-                row_info = {
-                    'Subject ID': subject_id,
-                    'Subject Label': subject_label,
-                    'Experiment ID': experiment_id,
-                    'Experiment Label': experiment_label,
-                    'Scan ID': scan_id,
-                    'Scan Type': scan_type,
-                    'Rater': rater,
-                    'Assessment Date': assessment_date,
-                    'Assessment': assessment_type,
-                    'Score': score
-                }
-                list_of_csv_elements.append(row_info)
-    return list_of_csv_elements
 
 app = App()
