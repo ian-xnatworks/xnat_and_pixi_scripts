@@ -59,15 +59,6 @@ class App:
     def init_session_state(self):
         # Initialize streamlit session state
         # Values will be populated later
-        if 'project' not in st.session_state:
-            st.session_state.project = self.project
-
-        if 'project_id' not in st.session_state:
-            st.session_state.project_id = self.project_id
-
-        if 'subjects' not in st.session_state:
-            st.session_state.subjects = self.project.subjects.values()
-
         if 'subject_labels' not in st.session_state:
             st.session_state.subject_labels = []
 
@@ -106,11 +97,13 @@ class App:
             st.markdown("*Create a report outlining the information found in the QC Assessments for fNIRS scans within the project.*")
             
             with st.expander("Options", expanded=True):
-                st.checkbox("Limit to Subjects", help='Set to true if you wish to limit the output to certain subjects.', key= 'limit_to_subjects', on_change=self.set_limit_to_subjects)
-                st.multiselect("Filter Subjects", st.session_state.subject_labels, default=[], help='Set which subjects will be used to make the output.',key='filter_subjects', disabled=st.session_state.get("subject_filter_on", True))
+                if self.base_element_type == 'project':
+                    st.checkbox("Limit to Subjects", help='Set to true if you wish to limit the output to certain subjects.', key= 'limit_to_subjects', on_change=self.set_limit_to_subjects)
+                    st.multiselect("Filter Subjects", st.session_state.subject_labels, default=[], help='Set which subjects will be used to make the output.',key='filter_subjects', disabled=st.session_state.get("subject_filter_on", True))
 
-                st.checkbox("Limit to Experiments", help='Set to true if you wish to limit the output to certain experiments.', key= 'limit_to_experiments', on_change=self.set_limit_to_experiments)
-                st.multiselect("Filter Experiments", st.session_state.experiment_labels, default=[], help='Set which experiments will be used to make the output.',key='filter_experiments', disabled=st.session_state.get("experiment_filter_on", True))
+                if self.base_element_type == 'project' or self.base_element_type == 'subject':
+                    st.checkbox("Limit to Experiments", help='Set to true if you wish to limit the output to certain experiments.', key= 'limit_to_experiments', on_change=self.set_limit_to_experiments)
+                    st.multiselect("Filter Experiments", st.session_state.experiment_labels, default=[], help='Set which experiments will be used to make the output.',key='filter_experiments', disabled=st.session_state.get("experiment_filter_on", True))
 
                 st.multiselect("Filter Assessment Type", ['lightFalloff', 'pulseSnr', 'pulsatility', 'motion', 'mapQuality'], default=[], help='Choose to only include certain assessment types in the report.',key='filter_assessment_type')
 
