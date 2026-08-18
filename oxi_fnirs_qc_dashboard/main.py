@@ -188,21 +188,10 @@ class App:
     def create_assessment_json(self, scan_json, assessment_type, data_fields_element, rater, datetime):
         assessment_json = {}
         assessment_json['rater'] = rater
-
-        if st.session_state.filter_date:
-            start_date = st.session_state.assessment_date_range_start
-            end_date = st.session_state.assessment_date_range_end
-            assessment_date_datetime = datetime.strptime(datetime, '%Y-%m-%d').date()
-            if start_date > assessment_date_datetime or end_date < assessment_date_datetime:
-                return
-
         assessment_json['date'] = datetime
         assessment_json['type'] = assessment_type
 
         if assessment_type not in data_fields_element:
-            return
-        
-        if st.session_state.filter_assessment_type and assessment_type not in st.session_state.filter_assessment_type:
             return
 
         assessment_json['score'] = data_fields_element[assessment_type]
@@ -214,7 +203,7 @@ class App:
         for subject in json_list:
             if st.session_state.limit_to_subjects and subject['label'] not in st.session_state.subject_labels:
                 continue
-            
+
             subject_id = subject['id']
             subject_label = subject['label']
 
@@ -228,6 +217,9 @@ class App:
                 for scan in experiment['scans']:
                     scan_id = scan['id']
                     scan_type = scan['type']
+                    
+                    if st.session_state.filter_assessment_type and scan_type not in st.session_state.filter_assessment_type:
+                        return
 
                     for assessment in scan['assessments']:
                         rater = assessment['rater']
@@ -235,18 +227,25 @@ class App:
                         assessment_type = assessment['type']
                         score = assessment['score']
 
-                    row_info = {
-                        'Subject ID': subject_id,
-                        'Subject Label': subject_label,
-                        'Experiment ID': experiment_id,
-                        'Experiment Label': experiment_label,
-                        'Scan ID': scan_id,
-                        'Scan Type': scan_type,
-                        'Rater': rater,
-                        'Assessment Date': assessment_date,
-                        'Assessment': assessment_type,
-                        'Score': score
-                    }
+                        if st.session_state.filter_date:
+                            start_date = st.session_state.assessment_date_range_start
+                            end_date = st.session_state.assessment_date_range_end
+                            assessment_date_datetime = datetime.strptime(assessment_date, '%Y-%m-%d').date()
+                            if start_date > assessment_date_datetime or end_date < assessment_date_datetime:
+                                continue
+
+                        row_info = {
+                            'Subject ID': subject_id,
+                            'Subject Label': subject_label,
+                            'Experiment ID': experiment_id,
+                            'Experiment Label': experiment_label,
+                            'Scan ID': scan_id,
+                            'Scan Type': scan_type,
+                            'Rater': rater,
+                            'Assessment Date': assessment_date,
+                            'Assessment': assessment_type,
+                            'Score': score
+                        }
                     list_of_csv_elements.append(row_info)
         return list_of_csv_elements
 
