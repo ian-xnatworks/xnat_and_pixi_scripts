@@ -112,7 +112,7 @@ class App:
 
     def create_table(self):
         json_outline = self.json_outline
-        csv_elements = convert_json_into_csv(json_outline)
+        csv_elements = self.convert_json_into_csv(json_outline)
 
         if csv_elements:
             df = pd.DataFrame.from_dict(csv_elements)
@@ -129,9 +129,6 @@ class App:
         subject_json_list = []
 
         for subject in subjects:
-            if st.session_state.limit_to_subjects and subject.label not in st.session_state.subject_labels:
-                continue
-
             subject_has_fnirs_qc_data = False
             subject_json = {}
             subject_json['id'] = subject.id
@@ -141,9 +138,6 @@ class App:
             experiments = subject.experiments.values()
 
             for experiment in experiments:
-                if st.session_state.limit_to_experiments and experiment.label not in st.session_state.experiment_labels:
-                    continue
-
                 if experiment.__xsi_type__ == 'fnirs:fnirsSessionData':
                     experiment_has_fnirs_qc_data = False
                     experiment_json = {}
@@ -214,45 +208,51 @@ class App:
         assessment_json['score'] = data_fields_element[assessment_type]
         scan_json['assessments'].append(assessment_json)
 
+    def convert_json_into_csv(self, json_list):
+        list_of_csv_elements = []
+
+        for subject in json_list:
+            if st.session_state.limit_to_subjects and subject['label'] not in st.session_state.subject_labels:
+                continue
+            
+            subject_id = subject['id']
+            subject_label = subject['label']
+
+            for experiment in subject['sessions']:
+                if st.session_state.limit_to_experiments and experiment['label'] not in st.session_state.experiment_labels:
+                    continue
+
+                experiment_id = experiment['id']
+                experiment_label = experiment['label']
+
+                for scan in experiment['scans']:
+                    scan_id = scan['id']
+                    scan_type = scan['type']
+
+                    for assessment in scan['assessments']:
+                        rater = assessment['rater']
+                        assessment_date = assessment['date']
+                        assessment_type = assessment['type']
+                        score = assessment['score']
+
+                    row_info = {
+                        'Subject ID': subject_id,
+                        'Subject Label': subject_label,
+                        'Experiment ID': experiment_id,
+                        'Experiment Label': experiment_label,
+                        'Scan ID': scan_id,
+                        'Scan Type': scan_type,
+                        'Rater': rater,
+                        'Assessment Date': assessment_date,
+                        'Assessment': assessment_type,
+                        'Score': score
+                    }
+                    list_of_csv_elements.append(row_info)
+        return list_of_csv_elements
+
 def clean_scan_name_for_scan_type(scan_name):
         non_letters_removed = re.sub(r'[^\w]|[\d_]', '', scan_name)
         scan_substring_removed = re.sub(r'scan', '', non_letters_removed, flags=re.IGNORECASE)
         return scan_substring_removed
-
-def convert_json_into_csv(json_list):
-    list_of_csv_elements = []
-
-    for subject in json_list:
-        subject_id = subject['id']
-        subject_label = subject['id']
-
-        for experiment in subject['sessions']:
-            experiment_id = experiment['id']
-            experiment_label = experiment['label']
-
-            for scan in experiment['scans']:
-                scan_id = scan['id']
-                scan_type = scan['type']
-
-                for assessment in scan['assessments']:
-                    rater = assessment['rater']
-                    assessment_date = assessment['date']
-                    assessment_type = assessment['type']
-                    score = assessment['score']
-
-                row_info = {
-                    'Subject ID': subject_id,
-                    'Subject Label': subject_label,
-                    'Experiment ID': experiment_id,
-                    'Experiment Label': experiment_label,
-                    'Scan ID': scan_id,
-                    'Scan Type': scan_type,
-                    'Rater': rater,
-                    'Assessment Date': assessment_date,
-                    'Assessment': assessment_type,
-                    'Score': score
-                }
-                list_of_csv_elements.append(row_info)
-    return list_of_csv_elements
 
 app = App()
