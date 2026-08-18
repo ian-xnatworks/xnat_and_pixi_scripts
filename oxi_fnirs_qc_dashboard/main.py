@@ -227,8 +227,9 @@ class App:
                             assessment_date_datetime = datetime.strptime(assessment_date, '%Y-%m-%d').date()
                             if start_date > assessment_date_datetime or end_date < assessment_date_datetime:
                                 continue
+
                         if st.session_state.filter_assessment_type and assessment_type not in st.session_state.filter_assessment_type:
-                            return
+                            continue
 
                         row_info = {
                             'Subject ID': subject_id,
