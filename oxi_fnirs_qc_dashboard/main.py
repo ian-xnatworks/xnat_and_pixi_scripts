@@ -228,7 +228,7 @@ class App:
     def convert_json_into_csv(self, json_list):
         list_of_csv_elements = []
 
-        if self.base_element_type == 'project' or self.base_element_type == 'experiment':
+        if self.base_element_type == 'project' or self.base_element_type == 'subject':
             for subject in json_list:
                 if st.session_state.limit_to_subjects and subject['label'] not in st.session_state.subject_labels:
                     continue
