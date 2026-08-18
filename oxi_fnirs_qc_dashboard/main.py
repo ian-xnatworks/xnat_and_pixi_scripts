@@ -47,10 +47,10 @@ class App:
                 self.experiment = self.connection.sessions[self.session_id]
                 base_element = self.experiment
             except Exception as e:
-                raise Exception(f'Error connecting to subject {(os.environ.get("XNAT_ITEM_ID"))}', e)
+                raise Exception(f'Error connecting to subject {self.session_id}', e)
 
         if base_element == None:
-            raise Exception("Unable to locate base element for Jupyter Dashboard.")
+            raise Exception((os.environ.get('XNAT_ITEM_ID')) + ' ' + os.environ.get('XNAT_XSI_TYPE'))
 
         self.json_outline = self.create_full_structure_json()
         self.init_session_state()
