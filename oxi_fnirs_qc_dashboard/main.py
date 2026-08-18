@@ -239,7 +239,7 @@ class App:
                 for experiment in subject['sessions']:
                     list_of_csv_elements.extend(self.convert_experiment_into_csv(experiment, True))
         else:
-            list_of_csv_elements.extend(self.convert_experiment_into_csv(experiment, False))
+            list_of_csv_elements.extend(self.convert_experiment_into_csv(json_list, False))
         return list_of_csv_elements
 
     def convert_experiment_into_csv(self, experiment, include_subject_elements):
