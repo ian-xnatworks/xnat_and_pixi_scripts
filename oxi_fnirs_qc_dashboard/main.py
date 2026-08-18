@@ -26,7 +26,7 @@ class App:
         self.password = password or os.environ.get('XNAT_PASS')
         self.project_id = project_id or (os.environ.get('XNAT_ITEM_ID') if os.environ.get('XNAT_XSI_TYPE') == 'xnat:projectData' else None)
         self.subject_id = subject_id or (os.environ.get('XNAT_ITEM_ID') if os.environ.get('XNAT_XSI_TYPE') == 'xnat:subjectData' else None)
-        self.session_id = session_id or (os.environ.get('XNAT_ITEM_ID') if os.environ.get('XNAT_XSI_TYPE') == 'fnirs:fnirsSessionData' else None)
+        self.experiment_id = experiment_id or (os.environ.get('XNAT_ITEM_ID') if os.environ.get('XNAT_XSI_TYPE') == 'xnat:experimentData' else None)
         self.connection = xnat.connect(self.host, user=self.user, password=self.password)
 
         base_element = None
@@ -42,15 +42,15 @@ class App:
                 base_element = self.subject
             except Exception as e:
                 raise Exception(f'Error connecting to subject {self.subject_id}', e)
-        if self.session_id:
+        if self.experiment_id:
             try: 
-                self.experiment = self.connection.sessions[self.session_id]
+                self.experiment = self.connection.sessions[self.experiment_id]
                 base_element = self.experiment
             except Exception as e:
-                raise Exception(f'Error connecting to subject {self.session_id}', e)
+                raise Exception(f'Error connecting to subject {self.experiment_id}', e)
 
         if base_element == None:
-            raise Exception((os.environ.get('XNAT_ITEM_ID')) + ' ' + os.environ.get('XNAT_XSI_TYPE'))
+            raise Exception("Unable to locate base element for Jupyter Dashboard.")
 
         self.json_outline = self.create_full_structure_json()
         self.init_session_state()
