@@ -2,10 +2,10 @@
 Jupyter dashboard to create a outline of fNIRS Scan QC data within a project
 """
 import os
+import re
 import streamlit as st
 import pandas as pd
 import xnat
-import requests
 import csv
 import argparse
 import json
