@@ -37,14 +37,14 @@ class App:
                 raise Exception(f'Error connecting to project {self.project_id}', e)
         if self.subject_id:
             try: 
-                self.subject = self.connection.subject[self.subject_id]
+                self.subject = self.connection.subjects[self.subject_id]
                 found_base_element = True
             except Exception as e:
                 raise Exception(f'Error connecting to subject {self.subject_id}', e)
 
         if found_base_element == False:
-            raise Exception("Unable to locate base element for Jupyter Notebook.")
-        
+            raise Exception("Unable to locate base element for Jupyter Dashboard.")
+
         self.json_outline = self.create_full_structure_json()
         self.init_session_state()
         self.init_ui()
