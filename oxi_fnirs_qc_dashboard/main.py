@@ -51,15 +51,11 @@ class App:
         if 'subjects' not in st.session_state:
             st.session_state.subjects = self.project.subjects.values()
 
-        # if 'subject_labels' not in st.session_state:
-        #     st.session_state.subject_labels = []
-        #     for subject in st.session_state.subjects:
-        #         st.session_state.subject_labels.append(subject.label)
+        if 'subject_labels' not in st.session_state:
+            st.session_state.subject_labels = []
 
-        # if 'experiment_labels' not in st.session_state:
-        #     st.session_state.experiment_labels = []
-        #     for experiment in self.project.experiments.values():
-        #         st.session_state.experiment_labels.append(experiment.label)
+        if 'experiment_labels' not in st.session_state:
+            st.session_state.experiment_labels = []
 
     def init_ui(self):
         # Hide streamlit deploy button
@@ -183,6 +179,7 @@ class App:
                 subject_json_list.append(subject_json)
 
         st.session_state.subject_labels = subjects_with_fnirs
+        st.session_state.experiment_labels = experiments_with_fnirs
         return subject_json_list
 
     def create_assessment_json(self, scan_json, assessment_type, data_fields_element, rater, datetime):
@@ -217,7 +214,7 @@ class App:
                 for scan in experiment['scans']:
                     scan_id = scan['id']
                     scan_type = scan['type']
-                    
+
                     if st.session_state.filter_assessment_type and scan_type not in st.session_state.filter_assessment_type:
                         return
 
