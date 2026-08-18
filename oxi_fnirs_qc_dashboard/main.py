@@ -44,10 +44,10 @@ class App:
                 raise Exception(f'Error connecting to subject {self.subject_id}', e)
         if self.experiment_id:
             try: 
-                self.experiment = self.connection.sessions[self.experiment_id]
+                self.experiment = self.connection.experiments[self.experiment_id]
                 base_element = self.experiment
             except Exception as e:
-                raise Exception(f'Error connecting to subject {self.experiment_id}', e)
+                raise Exception(dir(self.connection))
 
         if base_element == None:
             raise Exception("Unable to locate base element for Jupyter Dashboard.")
