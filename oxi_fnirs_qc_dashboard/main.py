@@ -20,7 +20,7 @@ st.markdown(css, unsafe_allow_html=True)
 
 class App:
 
-    def __init__(self, host=None, user=None, password=None, project_id=None, subject_id=None, session_id=None):
+    def __init__(self, host=None, user=None, password=None, project_id=None, subject_id=None, experiment_id=None):
         self.host = host or os.environ.get('XNAT_HOST')
         self.user = user or os.environ.get('XNAT_USER')
         self.password = password or os.environ.get('XNAT_PASS')
