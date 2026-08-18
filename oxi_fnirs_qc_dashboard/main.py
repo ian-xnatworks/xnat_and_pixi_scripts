@@ -74,6 +74,7 @@ class App:
             </style>
         """, unsafe_allow_html=True)
         self.init_options_sidebar()
+        self.init_main_section()
 
     def set_limit_to_subjects(self):
         st.session_state.subject_filter_on = not st.session_state.limit_to_subjects
@@ -103,76 +104,143 @@ class App:
                 st.date_input("Date range start", datetime.today(), help='Beginning of date range to filter assessments.', key='assessment_date_range_start', disabled=st.session_state.get("datetimes_disabled", True))
                 st.date_input("Date range end", datetime.today(), help='End of date range to filter assessments.', key='assessment_date_range_end', disabled=st.session_state.get("datetimes_disabled", True))
                 
-            # st.button("Create Report", on_click=self.extract_project_data)
+            st.button("Create Report", on_click=self.create_table)
+
+    def init_main_section(self):
+        self.main = st.container()
+
+    def create_table(self):
+        json_outline = self.create_full_structure_json(st.session_state.project)
+        csv_elements = convert_json_into_csv(json_outline)
+
+        if csv_elements:
+            df = pd.DataFrame.from_dict(csv_elements)
+            st.dataframe(df, height=600)            
+        else:
+            with self.main:
+                st.write(f"No fNIRS data found within the project.")
+
+    def create_full_structure_json(self, project):
+        subjects = project.subjects.values()
+
+        subject_json_list = []
+
+        for subject in subjects:
+            if st.session_state.subject_filter_on and subject.label not in st.session_state.subject_labels:
+                continue
+
+            subject_has_fnirs_qc_data = False
+            subject_json = {}
+            subject_json['id'] = subject.id
+            subject_json['label'] = subject.label
+            subject_experiment_jsons = []
+
+            experiments = subject.experiments.values()
+
+            for experiment in experiments:
+                if st.session_state.experiment_filter_on and experiment.label not in st.session_state.experiment_labels:
+                    continue
+
+                if experiment.__xsi_type__ == 'fnirs:fnirsSessionData':
+                    experiment_json = {}
+                    experiment_json['id'] = experiment.id
+                    experiment_json['label'] = experiment.label
+
+                    scan_id_to_scan_json_dict = {}
+                    for scan in experiment.scans.values():
+                        if scan.__xsi_type__ == 'fnirs:fnirsScanData':
+                            scan_json = {}
+                            scan_json['id'] = scan.id
+                            scan_json['type'] = clean_scan_name_for_scan_type(scan.id)
+                            scan_json['assessments'] = []
+                            scan_id_to_scan_json_dict[scan.id] = scan_json
+
+                    for assessor in experiment.assessors.values():
+                        scan_assessors = assessor.fulldata['children'][0]['items']
+                        for scan_assessor in scan_assessors:
+                            if scan_assessor['meta']['xsi:type'] != 'fnirs:fnirsQcScanData':
+                                continue
+
+                            subject_has_fnirs_qc_data = True
+                            data_fields = scan_assessor['data_fields']
+                            scan_json = scan_id_to_scan_json_dict[data_fields['imageScan_ID']]
+                            
+                            lightFalloff_assessment_json = self.create_assessment_json(scan_json, 'lightFalloff', data_fields, assessor.rater, scan_assessor['meta']['start_date'])
+                            pulseSnr_assessment_json = self.create_assessment_json(scan_json, 'pulseSnr', data_fields, assessor.rater, scan_assessor['meta']['start_date'])
+                            pulsatility_assessment_json = self.create_assessment_json(scan_json, 'pulsatility', data_fields, assessor.rater, scan_assessor['meta']['start_date'])
+                            motion_assessment_json = self.create_assessment_json(scan_json, 'motion', data_fields, assessor.rater, scan_assessor['meta']['start_date'])
+                            mapQuality_assessment_json = self.create_assessment_json(scan_json, 'mapQuality', data_fields, assessor.rater, scan_assessor['meta']['start_date'])
+                    
+                    experiment_json['scans'] = list(scan_id_to_scan_json_dict.values())
+                    subject_experiment_jsons.append(experiment_json)
+            if subject_has_fnirs_qc_data:
+                subject_json['sessions'] = subject_experiment_jsons
+                subject_json_list.append(subject_json)
+
+        return subject_json_list
+
+    def create_assessment_json(self, scan_json, assessment_type, data_fields_element, rater, datetime):
+        assessment_json = {}
+        assessment_json['rater'] = rater
+
+        if st.session_state.filter_date:
+            start_date = st.session_state.assessment_date_range_start
+            end_date = st.session_state.assessment_date_range_end
+            assessment_date_datetime = datetime.strptime(datetime, '%Y-%m-%d').date()
+            if start_date > assessment_date_datetime or end_date < assessment_date_datetime:
+                return
+
+        assessment_json['date'] = datetime
+        assessment_json['type'] = assessment_type
+
+        if assessment_type not in data_fields_element:
+            return
+        
+        if filter_assessment_type and assessment_type not in filter_assessment_type:
+            return
+
+        assessment_json['score'] = data_fields_element[assessment_type]
+        scan_json['assessments'].append(assessment_json)
 
 def clean_scan_name_for_scan_type(scan_name):
-    non_letters_removed = re.sub(r'[^\w]|[\d_]', '', scan_name)
-    scan_substring_removed = re.sub(r'scan', '', non_letters_removed, flags=re.IGNORECASE)
-    return scan_substring_removed
+        non_letters_removed = re.sub(r'[^\w]|[\d_]', '', scan_name)
+        scan_substring_removed = re.sub(r'scan', '', non_letters_removed, flags=re.IGNORECASE)
+        return scan_substring_removed
 
-def create_assessment_json(scan_json, assessment_type, data_fields_element, rater, datetime):
-    assessment_json = {}
-    assessment_json['rater'] = rater
-    assessment_json['date'] = datetime
+def convert_json_into_csv(json_list):
+    list_of_csv_elements = []
 
-    if assessment_type not in data_fields_element:
-        return
-    assessment_json['score'] = data_fields_element[assessment_type]
+    for subject in json_list:
+        subject_id = subject['id']
+        subject_label = subject['id']
 
-    if assessment_type in scan_json['assessments']:
-        scan_json['assessments'][assessment_type].append(assessment_json)
-    else:
-        scan_json['assessments'][assessment_type] = [assessment_json]
+        for experiment in subject['sessions']:
+            experiment_id = experiment['id']
+            experiment_label = experiment['label']
 
-def create_full_structure_json(project):
-    subjects = project.subjects.values()
+            for scan in experiment['scans']:
+                scan_id = scan['id']
+                scan_type = scan['type']
 
-    subject_json_list = []
+                for assessment in scan['assessments']:
+                    rater = assessment['rater']
+                    assessment_date = assessment['date']
+                    assessment_type = assessment['type']
+                    score = assessment['score']
 
-    for subject in subjects:
-        subject_has_fnirs_qc_data = False
-        subject_json = {}
-        subject_json['id'] = subject.id
-        subject_json['label'] = subject.label
-        subject_experiment_jsons = []
-
-        experiments = subject.experiments.values()
-
-        for experiment in experiments:
-            if experiment.__xsi_type__ == 'fnirs:fnirsSessionData':
-                experiment_json = {}
-                experiment_json['id'] = experiment.id
-                experiment_json['label'] = experiment.label
-
-                scan_id_to_scan_json_dict = {}
-                for scan in experiment.scans.values():
-                    if scan.__xsi_type__ == 'fnirs:fnirsScanData':
-                        scan_json = {}
-                        scan_json['id'] = scan.id
-                        scan_json['type'] = clean_scan_name_for_scan_type(scan.id)
-                        scan_json['assessments'] = {}
-                        scan_id_to_scan_json_dict[scan.id] = scan_json
-
-                for assessor in experiment.assessors.values():
-                    scan_assessors = assessor.fulldata['children'][0]['items']
-                    for scan_assessor in scan_assessors:
-                        if scan_assessor['meta']['xsi:type'] != 'fnirs:fnirsQcScanData':
-                            continue
-
-                        subject_has_fnirs_qc_data = True
-                        data_fields = scan_assessor['data_fields']
-                        scan_json = scan_id_to_scan_json_dict[data_fields['imageScan_ID']]
-                        
-                        lightFalloff_assessment_json = create_assessment_json(scan_json, 'lightFalloff', data_fields, assessor.rater, scan_assessor['meta']['start_date'])
-                        pulseSnr_assessment_json = create_assessment_json(scan_json, 'pulseSnr', data_fields, assessor.rater, scan_assessor['meta']['start_date'])
-                        pulsatility_assessment_json = create_assessment_json(scan_json, 'pulsatility', data_fields, assessor.rater, scan_assessor['meta']['start_date'])
-                        motion_assessment_json = create_assessment_json(scan_json, 'motion', data_fields, assessor.rater, scan_assessor['meta']['start_date'])
-                        mapQuality_assessment_json = create_assessment_json(scan_json, 'mapQuality', data_fields, assessor.rater, scan_assessor['meta']['start_date'])
-                
-                experiment_json['scans'] = list(scan_id_to_scan_json_dict.values())
-                subject_experiment_jsons.append(experiment_json)
-        if subject_has_fnirs_qc_data:
-            subject_json['sessions'] = subject_experiment_jsons
-            subject_json_list.append(subject_json)
+                row_info = {
+                    'Subject ID': subject_id,
+                    'Subject Label': subject_label,
+                    'Experiment ID': experiment_id,
+                    'Experiment Label': experiment_label,
+                    'Scan ID': scan_id,
+                    'Scan Type': scan_type,
+                    'Rater': rater,
+                    'Assessment Date': assessment_date,
+                    'Assessment': assessment_type,
+                    'Score': score
+                }
+                list_of_csv_elements.append(row_info)
+    return list_of_csv_elements
 
 app = App()
