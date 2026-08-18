@@ -35,6 +35,7 @@ class App:
         else:
             raise Exception('Must be started from an XNAT project.')
 
+        self.json_outline = self.create_full_structure_json()
         self.init_session_state()
         self.init_ui()
 
@@ -50,15 +51,15 @@ class App:
         if 'subjects' not in st.session_state:
             st.session_state.subjects = self.project.subjects.values()
 
-        if 'subject_labels' not in st.session_state:
-            st.session_state.subject_labels = []
-            for subject in st.session_state.subjects:
-                st.session_state.subject_labels.append(subject.label)
+        # if 'subject_labels' not in st.session_state:
+        #     st.session_state.subject_labels = []
+        #     for subject in st.session_state.subjects:
+        #         st.session_state.subject_labels.append(subject.label)
 
-        if 'experiment_labels' not in st.session_state:
-            st.session_state.experiment_labels = []
-            for experiment in self.project.experiments.values():
-                st.session_state.experiment_labels.append(experiment.label)
+        # if 'experiment_labels' not in st.session_state:
+        #     st.session_state.experiment_labels = []
+        #     for experiment in self.project.experiments.values():
+        #         st.session_state.experiment_labels.append(experiment.label)
 
     def init_ui(self):
         # Hide streamlit deploy button
@@ -110,7 +111,7 @@ class App:
         self.main = st.container()
 
     def create_table(self):
-        json_outline = self.create_full_structure_json(st.session_state.project)
+        json_outline = self.json_outline
         csv_elements = convert_json_into_csv(json_outline)
 
         if csv_elements:
@@ -120,8 +121,10 @@ class App:
             with self.main:
                 st.write(f"No fNIRS data found within the project.")
 
-    def create_full_structure_json(self, project):
-        subjects = project.subjects.values()
+    def create_full_structure_json(self):
+        subjects = self.project.subjects.values()
+        subjects_with_fnirs = []
+        experiments_with_fnirs = []
 
         subject_json_list = []
 
@@ -142,6 +145,7 @@ class App:
                     continue
 
                 if experiment.__xsi_type__ == 'fnirs:fnirsSessionData':
+                    experiment_has_fnirs_qc_data = False
                     experiment_json = {}
                     experiment_json['id'] = experiment.id
                     experiment_json['label'] = experiment.label
@@ -161,7 +165,13 @@ class App:
                             if scan_assessor['meta']['xsi:type'] != 'fnirs:fnirsQcScanData':
                                 continue
 
-                            subject_has_fnirs_qc_data = True
+                            if subject_has_fnirs_qc_data == False:
+                                subject_has_fnirs_qc_data = True
+                                subjects_with_fnirs.append(subject.label)
+                            if experiment_has_fnirs_qc_data == False:
+                                experiment_has_fnirs_qc_data = True
+                                experiments_with_fnirs.append(experiment.label)
+
                             data_fields = scan_assessor['data_fields']
                             scan_json = scan_id_to_scan_json_dict[data_fields['imageScan_ID']]
                             
@@ -171,12 +181,14 @@ class App:
                             motion_assessment_json = self.create_assessment_json(scan_json, 'motion', data_fields, assessor.rater, scan_assessor['meta']['start_date'])
                             mapQuality_assessment_json = self.create_assessment_json(scan_json, 'mapQuality', data_fields, assessor.rater, scan_assessor['meta']['start_date'])
                     
-                    experiment_json['scans'] = list(scan_id_to_scan_json_dict.values())
-                    subject_experiment_jsons.append(experiment_json)
+                    if experiment_has_fnirs_qc_data:
+                        experiment_json['scans'] = list(scan_id_to_scan_json_dict.values())
+                        subject_experiment_jsons.append(experiment_json)
             if subject_has_fnirs_qc_data:
                 subject_json['sessions'] = subject_experiment_jsons
                 subject_json_list.append(subject_json)
 
+        st.session_state.subject_labels = subjects_with_fnirs
         return subject_json_list
 
     def create_assessment_json(self, scan_json, assessment_type, data_fields_element, rater, datetime):
