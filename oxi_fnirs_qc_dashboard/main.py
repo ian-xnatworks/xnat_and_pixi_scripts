@@ -126,7 +126,7 @@ class App:
         subject_json_list = []
 
         for subject in subjects:
-            if st.session_state.subject_filter_on and subject.label not in st.session_state.subject_labels:
+            if st.session_state.limit_to_subjects and subject.label not in st.session_state.subject_labels:
                 continue
 
             subject_has_fnirs_qc_data = False
@@ -138,7 +138,7 @@ class App:
             experiments = subject.experiments.values()
 
             for experiment in experiments:
-                if st.session_state.experiment_filter_on and experiment.label not in st.session_state.experiment_labels:
+                if st.session_state.limit_to_experiments and experiment.label not in st.session_state.experiment_labels:
                     continue
 
                 if experiment.__xsi_type__ == 'fnirs:fnirsSessionData':
