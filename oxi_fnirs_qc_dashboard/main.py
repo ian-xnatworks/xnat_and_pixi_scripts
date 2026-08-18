@@ -20,11 +20,12 @@ st.markdown(css, unsafe_allow_html=True)
 
 class App:
 
-    def __init__(self, host=None, user=None, password=None, project_id=None):
+    def __init__(self, host=None, user=None, password=None, project_id=None, subject_id=None):
         self.host = host or os.environ.get('XNAT_HOST')
         self.user = user or os.environ.get('XNAT_USER')
         self.password = password or os.environ.get('XNAT_PASS')
         self.project_id = project_id or (os.environ.get('XNAT_ITEM_ID') if os.environ.get('XNAT_XSI_TYPE') == 'xnat:projectData' else None)
+        self.subject_id = subject_id or (os.environ.get('XNAT_ITEM_ID') if os.environ.get('XNAT_XSI_TYPE') == 'xnat:subjectData' else None)
         self.connection = xnat.connect(self.host, user=self.user, password=self.password)
 
         if self.project_id:
@@ -32,6 +33,14 @@ class App:
                 self.project = self.connection.projects[self.project_id]
             except Exception as e:
                 raise Exception(f'Error connecting to project {self.project_id}', e)
+        else:
+            raise Exception('Must be started from an XNAT project.')
+
+        if self.subject_id:
+            try: 
+                self.subject = self.connection.subject[self.subject_id]
+            except Exception as e:
+                raise Exception(f'Error connecting to subject {self.subject_id}', e)
         else:
             raise Exception('Must be started from an XNAT project.')
 
