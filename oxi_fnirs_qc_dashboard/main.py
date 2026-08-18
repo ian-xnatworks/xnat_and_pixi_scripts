@@ -20,29 +20,36 @@ st.markdown(css, unsafe_allow_html=True)
 
 class App:
 
-    def __init__(self, host=None, user=None, password=None, project_id=None, subject_id=None):
+    def __init__(self, host=None, user=None, password=None, project_id=None, subject_id=None, session_id=None):
         self.host = host or os.environ.get('XNAT_HOST')
         self.user = user or os.environ.get('XNAT_USER')
         self.password = password or os.environ.get('XNAT_PASS')
         self.project_id = project_id or (os.environ.get('XNAT_ITEM_ID') if os.environ.get('XNAT_XSI_TYPE') == 'xnat:projectData' else None)
         self.subject_id = subject_id or (os.environ.get('XNAT_ITEM_ID') if os.environ.get('XNAT_XSI_TYPE') == 'xnat:subjectData' else None)
+        self.session_id = session_id or (os.environ.get('XNAT_ITEM_ID') if os.environ.get('XNAT_XSI_TYPE') == 'fnirs:fnirsSessionData' else None)
         self.connection = xnat.connect(self.host, user=self.user, password=self.password)
 
-        found_base_element = False
+        base_element = None
         if self.project_id:
             try: 
                 self.project = self.connection.projects[self.project_id]
-                found_base_element = True
+                base_element = self.project
             except Exception as e:
                 raise Exception(f'Error connecting to project {self.project_id}', e)
         if self.subject_id:
             try: 
                 self.subject = self.connection.subjects[self.subject_id]
-                found_base_element = True
+                base_element = self.subject
             except Exception as e:
                 raise Exception(f'Error connecting to subject {self.subject_id}', e)
+        if self.session_id:
+            try: 
+                self.experiment = self.connection.sessions[self.session_id]
+                base_element = self.experiment
+            except Exception as e:
+                raise Exception(f'Error connecting to subject {(os.environ.get('XNAT_ITEM_ID'))}', e)
 
-        if found_base_element == False:
+        if base_element == None:
             raise Exception("Unable to locate base element for Jupyter Dashboard.")
 
         self.json_outline = self.create_full_structure_json()
