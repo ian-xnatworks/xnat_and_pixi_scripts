@@ -114,8 +114,12 @@ class App:
             df = pd.DataFrame.from_dict(csv_elements)
             st.dataframe(df, height=600, hide_index=True)            
         else:
-            with self.main:
-                st.write(f"No fNIRS data found within the project.")
+            if st.session_state.limit_to_subjects or st.session_state.limit_to_experiments or st.session_state.filter_date or st.session_state.filter_assessment_type:
+                 with self.main:
+                    st.write(f"No fNIRS data found in the project that conforms to the input options.")
+            else:
+                with self.main:
+                    st.write(f"No fNIRS data found within the project.")
 
     def create_full_structure_json(self):
         subjects = self.project.subjects.values()
