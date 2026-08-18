@@ -230,7 +230,7 @@ class App:
 
         if self.base_element_type == 'project' or self.base_element_type == 'subject':
             for subject in json_list:
-                if st.session_state.limit_to_subjects and subject['label'] not in st.session_state.subject_labels:
+                if self.base_element_type == 'subject' and st.session_state.limit_to_subjects and subject['label'] not in st.session_state.subject_labels:
                     continue
 
                 subject_id = subject['id']
@@ -243,7 +243,7 @@ class App:
         return list_of_csv_elements
 
     def convert_experiment_into_csv(self, experiment, include_subject_elements):
-        if st.session_state.limit_to_experiments and experiment['label'] not in st.session_state.experiment_labels:
+        if self.base_element_type != 'experiment' and st.session_state.limit_to_experiments and experiment['label'] not in st.session_state.experiment_labels:
             return []
 
         list_of_csv_elements = []
