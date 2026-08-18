@@ -28,22 +28,23 @@ class App:
         self.subject_id = subject_id or (os.environ.get('XNAT_ITEM_ID') if os.environ.get('XNAT_XSI_TYPE') == 'xnat:subjectData' else None)
         self.connection = xnat.connect(self.host, user=self.user, password=self.password)
 
+        found_base_element = False
         if self.project_id:
             try: 
                 self.project = self.connection.projects[self.project_id]
+                found_base_element = True
             except Exception as e:
                 raise Exception(f'Error connecting to project {self.project_id}', e)
-        else:
-            raise Exception('Must be started from an XNAT project.')
-
         if self.subject_id:
             try: 
                 self.subject = self.connection.subject[self.subject_id]
+                found_base_element = True
             except Exception as e:
                 raise Exception(f'Error connecting to subject {self.subject_id}', e)
-        else:
-            raise Exception('Must be started from an XNAT project.')
 
+        if found_base_element == False:
+            raise Exception("Unable to locate base element for Jupyter Notebook.")
+        
         self.json_outline = self.create_full_structure_json()
         self.init_session_state()
         self.init_ui()
