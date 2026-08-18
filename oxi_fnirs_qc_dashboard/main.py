@@ -215,9 +215,6 @@ class App:
                     scan_id = scan['id']
                     scan_type = scan['type']
 
-                    if st.session_state.filter_assessment_type and scan_type not in st.session_state.filter_assessment_type:
-                        return
-
                     for assessment in scan['assessments']:
                         rater = assessment['rater']
                         assessment_date = assessment['date']
@@ -230,6 +227,8 @@ class App:
                             assessment_date_datetime = datetime.strptime(assessment_date, '%Y-%m-%d').date()
                             if start_date > assessment_date_datetime or end_date < assessment_date_datetime:
                                 continue
+                        if st.session_state.filter_assessment_type and assessment_type not in st.session_state.filter_assessment_type:
+                            return
 
                         row_info = {
                             'Subject ID': subject_id,
