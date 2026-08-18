@@ -115,7 +115,7 @@ class App:
 
         if csv_elements:
             df = pd.DataFrame.from_dict(csv_elements)
-            st.dataframe(df, height=600)            
+            st.dataframe(df, height=600, hide_index=True)            
         else:
             with self.main:
                 st.write(f"No fNIRS data found within the project.")
