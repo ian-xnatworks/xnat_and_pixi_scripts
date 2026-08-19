@@ -212,7 +212,6 @@ class App:
                     if scan_assessor['meta']['xsi:type'] != 'fnirs:fnirsQcScanData':
                         continue
 
-                    self.debug_string = self.debug_string + 'Scan: ' + scan_assessor.id + '\n'
                     data_fields = scan_assessor['data_fields']
                     scan_json = scan_id_to_scan_json_dict[data_fields['imageScan_ID']]
                     
