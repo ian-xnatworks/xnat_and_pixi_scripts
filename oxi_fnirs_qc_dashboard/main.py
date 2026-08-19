@@ -233,7 +233,7 @@ class App:
 
         if self.base_element_type == 'project' or self.base_element_type == 'subject':
             for subject in json_list:
-                if self.base_element_type == 'project' and st.session_state.limit_to_subjects and subject['label'] not in st.session_state.subject_labels:
+                if self.base_element_type == 'project' and st.session_state.limit_to_subjects and subject['label'] not in st.session_state.filter_subjects:
                     continue
 
                 subject_id = subject['id']
@@ -246,7 +246,7 @@ class App:
         return list_of_csv_elements
 
     def convert_experiment_into_csv(self, experiment, include_subject_elements, subject_id, subject_label):
-        if self.base_element_type != 'experiment' and st.session_state.limit_to_experiments and experiment['label'] not in st.session_state.experiment_labels:
+        if self.base_element_type != 'experiment' and st.session_state.limit_to_experiments and experiment['label'] not in st.session_state.filter_experiments:
             return []
 
         list_of_csv_elements = []
@@ -274,17 +274,17 @@ class App:
 
                 if st.session_state.filter_assessment_type and assessment_type not in st.session_state.filter_assessment_type:
                     continue
-                
-                overlapping_assessment = next(
-                    (assessment for assessment in list_of_csv_element_for_scan if assessment.get("Rater") == rater and assessment.get("Assessment") == assessment_type),
-                    None 
-                )
+                if st.session_state.filter_date.remove_duplicate_ratings:
+                    overlapping_assessment = next(
+                        (assessment for assessment in list_of_csv_element_for_scan if assessment.get("Rater") == rater and assessment.get("Assessment") == assessment_type),
+                        None 
+                    )
 
-                if overlapping_assessment != None:
-                    if overlapping_assessment['Assessment Date'] > assessment_date:
-                        continue
-                    else:
-                        list_of_csv_element_for_scan.remove(overlapping_assessment)
+                    if overlapping_assessment != None:
+                        if overlapping_assessment['Assessment Date'] > assessment_date:
+                            continue
+                        else:
+                            list_of_csv_element_for_scan.remove(overlapping_assessment)
 
                 row_info = {}
                 if include_subject_elements:
