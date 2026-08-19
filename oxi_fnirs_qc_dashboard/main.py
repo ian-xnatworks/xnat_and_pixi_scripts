@@ -53,8 +53,8 @@ class App:
         if not self.base_element_type:
             raise Exception("Unable to locate base element for Jupyter Dashboard.")
 
-        self.json_outline = self.create_full_structure_json()
         self.init_session_state()
+        self.json_outline = self.create_full_structure_json()
         self.init_ui()
 
     def init_session_state(self):
