@@ -254,12 +254,12 @@ class App:
                 subject_label = subject['label']
 
                 for experiment in subject['sessions']:
-                    list_of_csv_elements.extend(self.convert_experiment_into_csv(experiment, True))
+                    list_of_csv_elements.extend(self.convert_experiment_into_csv(experiment, True, subject_id, subject_label))
         else:
-            list_of_csv_elements.extend(self.convert_experiment_into_csv(json_list, False))
+            list_of_csv_elements.extend(self.convert_experiment_into_csv(json_list, False, None, None))
         return list_of_csv_elements
 
-    def convert_experiment_into_csv(self, experiment, include_subject_elements):
+    def convert_experiment_into_csv(self, experiment, include_subject_elements, subject_id, subject_label):
         if self.base_element_type != 'experiment' and st.session_state.limit_to_experiments and experiment['label'] not in st.session_state.experiment_labels:
             return []
 
