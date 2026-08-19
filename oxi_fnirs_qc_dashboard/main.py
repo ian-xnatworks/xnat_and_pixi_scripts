@@ -119,10 +119,7 @@ class App:
 
     def create_table(self):
         json_outline = self.json_outline
-        try:
-            csv_elements = self.convert_json_into_csv(json_outline)
-        except Exception as e:
-            raise Exception(self.debug_string)
+        csv_elements = self.convert_json_into_csv(json_outline)
 
         if csv_elements:
             df = pd.DataFrame.from_dict(csv_elements)
@@ -130,10 +127,12 @@ class App:
         else:
             if st.session_state.limit_to_subjects or st.session_state.limit_to_experiments or st.session_state.filter_date or st.session_state.filter_assessment_type:
                  with self.main:
-                    st.write(f"No fNIRS data found in the project that conforms to the input options.")
+                    output_string = "No fNIRS data found in the " + self.base_element_type + " that conforms to the input options."
+                    st.write(output_string)
             else:
                 with self.main:
-                    st.write(f"No fNIRS data found within the project.")
+                    output_string = "No fNIRS data found in the " + self.base_element_type + "."
+                    st.write(output_string)
 
     def create_full_structure_json(self):
         if self.base_element_type == 'project':
