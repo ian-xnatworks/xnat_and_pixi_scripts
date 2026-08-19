@@ -118,7 +118,10 @@ class App:
 
     def create_table(self):
         json_outline = self.json_outline
-        csv_elements = self.convert_json_into_csv(json_outline)
+        try:
+            csv_elements = self.convert_json_into_csv(json_outline)
+        except Exception as e:
+                raise Exception(self.base_element_type)
 
         if csv_elements:
             df = pd.DataFrame.from_dict(csv_elements)
