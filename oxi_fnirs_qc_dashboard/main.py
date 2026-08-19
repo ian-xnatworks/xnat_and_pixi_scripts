@@ -212,6 +212,7 @@ class App:
                     if scan_assessor['meta']['xsi:type'] != 'fnirs:fnirsQcScanData':
                         continue
 
+                    experiment_has_fnirs_qc_data = True
                     data_fields = scan_assessor['data_fields']
                     scan_json = scan_id_to_scan_json_dict[data_fields['imageScan_ID']]
                     
@@ -223,7 +224,7 @@ class App:
             
             if experiment_has_fnirs_qc_data:
                 if experiment.label not in st.session_state.experiment_labels:
-                        st.session_state.experiment_labels.append(experiment.label)
+                    st.session_state.experiment_labels.append(experiment.label)
                 experiment_json['scans'] = list(scan_id_to_scan_json_dict.values())
                 return experiment_json
             else:
