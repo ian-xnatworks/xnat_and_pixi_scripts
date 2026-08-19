@@ -268,8 +268,7 @@ class App:
                 if st.session_state.filter_date:
                     start_date = st.session_state.assessment_date_range_start
                     end_date = st.session_state.assessment_date_range_end
-                    assessment_date_datetime = datetime.strptime(assessment_date, '%Y-%m-%d').date()
-                    if start_date > assessment_date_datetime or end_date < assessment_date_datetime:
+                    if start_date > assessment_date or end_date < assessment_date:
                         continue
 
                 if st.session_state.filter_assessment_type and assessment_type not in st.session_state.filter_assessment_type:
