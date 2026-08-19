@@ -29,6 +29,7 @@ class App:
         self.experiment_id = experiment_id or (os.environ.get('XNAT_ITEM_ID') if os.environ.get('XNAT_XSI_TYPE') == 'xnat:experimentData' else None)
         self.connection = xnat.connect(self.host, user=self.user, password=self.password)
 
+        self.debug_string = ''
         self.base_element_type = ''
         if self.project_id:
             try: 
@@ -121,7 +122,7 @@ class App:
         try:
             csv_elements = self.convert_json_into_csv(json_outline)
         except Exception as e:
-            raise Exception(self.json_outline)
+            raise Exception(self.debug_string)
 
         if csv_elements:
             df = pd.DataFrame.from_dict(csv_elements)
@@ -136,21 +137,30 @@ class App:
 
     def create_full_structure_json(self):
         if self.base_element_type == 'project':
+            self.debug_string = self.debug_string + 'Reached Project Section\n'
             subjects = self.project.subjects.values()
             subject_json_list = []
 
             for subject in subjects:
+                self.debug_string = self.debug_string + 'Subject Name: ' + self.subject.id + '\n'
                 subject_json = self.create_subject_sctructure(subject)
+                self.debug_string = self.debug_string + subject_json + '\n'
                 if subject_json != None:
                     subject_json_list.append(subject_json)
 
             return subject_json_list
         elif self.base_element_type == 'subject':
+            self.debug_string = self.debug_string + 'Reached Subject Section\n'
+            self.debug_string = self.debug_string + 'Subject Name: ' + self.subject.id + '\n'
             subject_json = self.create_subject_sctructure(self.subject)
+            self.debug_string = self.debug_string + subject_json + '\n'
             if subject_json != None:
                 return [subject_json]
         elif self.base_element_type == 'experiment':
+            self.debug_string = self.debug_string + 'Reached Experiment Section\n'
+            self.debug_string = self.debug_string + 'Experiment Name: ' + self.experiement.id + '\n'
             experiment_json = self.create_experiment_structure(self.experiment)
+            self.debug_string = self.debug_string + experiment_json + '\n'
             if experiment_json != None:
                 return experiment_json
 
