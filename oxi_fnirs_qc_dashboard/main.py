@@ -268,7 +268,8 @@ class App:
                 if st.session_state.filter_date:
                     start_date = st.session_state.assessment_date_range_start
                     end_date = st.session_state.assessment_date_range_end
-                    if start_date > assessment_date or end_date < assessment_date:
+                    assessment_date_datetime = datetime.strptime(assessment_date, "%a %b %d %H:%M:%S UTC %Y").date()
+                    if start_date > assessment_date_datetime or end_date < assessment_date_datetime:
                         continue
 
                 if st.session_state.filter_assessment_type and assessment_type not in st.session_state.filter_assessment_type:
@@ -280,6 +281,8 @@ class App:
                     )
 
                     if overlapping_assessment != None:
+                        overlapping_assessment_datetime = datetime.strptime(overlapping_assessment_datetime['date'], "%a %b %d %H:%M:%S UTC %Y")
+                        new_assessment_datetime = datetime.strptime(assessment_date, "%a %b %d %H:%M:%S UTC %Y")
                         if overlapping_assessment['Assessment Date'] > assessment_date:
                             continue
                         else:
