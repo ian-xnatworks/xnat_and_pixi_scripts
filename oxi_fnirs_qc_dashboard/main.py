@@ -142,7 +142,7 @@ class App:
             subject_json_list = []
 
             for subject in subjects:
-                self.debug_string = self.debug_string + 'Subject Name: ' + self.subject.id + '\n'
+                self.debug_string = self.debug_string + 'Subject Name: ' + subject.id + '\n'
                 subject_json = self.create_subject_sctructure(subject)
                 self.debug_string = self.debug_string + subject_json + '\n'
                 if subject_json != None:
@@ -158,7 +158,7 @@ class App:
                 return [subject_json]
         elif self.base_element_type == 'experiment':
             self.debug_string = self.debug_string + 'Reached Experiment Section\n'
-            self.debug_string = self.debug_string + 'Experiment Name: ' + self.experiement.id + '\n'
+            self.debug_string = self.debug_string + 'Experiment Name: ' + self.experiment.id + '\n'
             experiment_json = self.create_experiment_structure(self.experiment)
             self.debug_string = self.debug_string + experiment_json + '\n'
             if experiment_json != None:
