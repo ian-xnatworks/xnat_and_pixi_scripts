@@ -9,7 +9,7 @@ import xnat
 import csv
 import argparse
 import json
-from datetime import datetime
+from dateutil import parser
 
 css='''
 <style>
@@ -268,7 +268,7 @@ class App:
                 if st.session_state.filter_date:
                     start_date = st.session_state.assessment_date_range_start
                     end_date = st.session_state.assessment_date_range_end
-                    assessment_date_datetime = datetime.strptime(assessment_date, "%a %b %d %H:%M:%S %Z %Y").date()
+                    assessment_date_datetime = parser.parse(assessment_date).date()
                     if start_date > assessment_date_datetime or end_date < assessment_date_datetime:
                         continue
 
@@ -281,9 +281,9 @@ class App:
                     )
 
                     if overlapping_assessment != None:
-                        overlapping_assessment_datetime = datetime.strptime(overlapping_assessment_datetime['date'], "%a %b %d %H:%M:%S %Z %Y")
-                        new_assessment_datetime = datetime.strptime(assessment_date, "%a %b %d %H:%M:%S %Z %Y")
-                        if overlapping_assessment['Assessment Date'] > assessment_date:
+                        overlapping_assessment_datetime = parser.parse(overlapping_assessment['Assessment Date'])
+                        new_assessment_datetime = parser.parse(assessment_date)
+                        if overlapping_assessment_datetime > new_assessment_datetime:
                             continue
                         else:
                             list_of_csv_element_for_scan.remove(overlapping_assessment)
