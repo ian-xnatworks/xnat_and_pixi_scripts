@@ -274,7 +274,7 @@ class App:
 
                 if st.session_state.filter_assessment_type and assessment_type not in st.session_state.filter_assessment_type:
                     continue
-                if st.session_state.filter_date.remove_duplicate_ratings:
+                if st.session_state.remove_duplicate_ratings:
                     overlapping_assessment = next(
                         (assessment for assessment in list_of_csv_element_for_scan if assessment.get("Rater") == rater and assessment.get("Assessment") == assessment_type),
                         None 
