@@ -257,6 +257,8 @@ class App:
             scan_id = scan['id']
             scan_type = scan['type']
 
+            list_of_csv_element_for_scan = []
+
             for assessment in scan['assessments']:
                 rater = assessment['rater']
                 assessment_date = assessment['date']
@@ -272,21 +274,33 @@ class App:
 
                 if st.session_state.filter_assessment_type and assessment_type not in st.session_state.filter_assessment_type:
                     continue
+                
+                overlapping_assessment = next(
+                    (assessment for assessment in list_of_csv_element_for_scan if assessment.get("Rater") == rater and assessment.get("Assessment") == assessment_type),
+                    None 
+                )
+
+                if overlapping_assessment != None:
+                    if overlapping_assessment['Assessment Date'] > assessment_date:
+                        continue
+                    else:
+                        list_of_csv_element_for_scan.remove(overlapping_assessment)
 
                 row_info = {}
                 if include_subject_elements:
                     row_info['Subject ID'] = subject_id
-                    row_info['Subject Label'] = subject_label,                    
+                    row_info['Subject Label'] = subject_label                  
                 
-                row_info['Experiment ID'] = experiment_id,
-                row_info['Experiment Label'] = experiment_label,
-                row_info['Scan ID'] = scan_id,
-                row_info['Scan Type'] = scan_type,
-                row_info['Rater'] =  rater,
-                row_info['Assessment Date'] = assessment_date,
-                row_info['Assessment'] = assessment_type,
+                row_info['Experiment ID'] = experiment_id
+                row_info['Experiment Label'] = experiment_label
+                row_info['Scan ID'] = scan_id
+                row_info['Scan Type'] = scan_type
+                row_info['Rater'] =  rater
+                row_info['Assessment Date'] = assessment_date
+                row_info['Assessment'] = assessment_type
                 row_info['Score'] = score
-                list_of_csv_elements.append(row_info)
+                list_of_csv_element_for_scan.append(row_info)
+            list_of_csv_elements.extend(list_of_csv_element_for_scan)
         return list_of_csv_elements
 
 def clean_scan_name_for_scan_type(scan_name):
