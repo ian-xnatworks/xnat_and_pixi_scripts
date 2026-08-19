@@ -121,7 +121,7 @@ class App:
         try:
             csv_elements = self.convert_json_into_csv(json_outline)
         except Exception as e:
-                raise Exception(self.base_element_type)
+            raise Exception(self.json_outline)
 
         if csv_elements:
             df = pd.DataFrame.from_dict(csv_elements)
