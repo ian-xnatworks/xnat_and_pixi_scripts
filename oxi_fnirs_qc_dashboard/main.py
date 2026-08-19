@@ -29,7 +29,6 @@ class App:
         self.experiment_id = experiment_id or (os.environ.get('XNAT_ITEM_ID') if os.environ.get('XNAT_XSI_TYPE') == 'xnat:experimentData' else None)
         self.connection = xnat.connect(self.host, user=self.user, password=self.password)
 
-        self.debug_string = ''
         self.base_element_type = ''
         if self.project_id:
             try: 
@@ -136,30 +135,21 @@ class App:
 
     def create_full_structure_json(self):
         if self.base_element_type == 'project':
-            self.debug_string = self.debug_string + 'Reached Project Section\n'
             subjects = self.project.subjects.values()
             subject_json_list = []
 
             for subject in subjects:
-                self.debug_string = self.debug_string + 'Subject Name: ' + subject.id + '\n'
                 subject_json = self.create_subject_sctructure(subject)
-                self.debug_string = self.debug_string + subject_json + '\n'
                 if subject_json != None:
                     subject_json_list.append(subject_json)
 
             return subject_json_list
         elif self.base_element_type == 'subject':
-            self.debug_string = self.debug_string + 'Reached Subject Section\n'
-            self.debug_string = self.debug_string + 'Subject Name: ' + self.subject.id + '\n'
             subject_json = self.create_subject_sctructure(self.subject)
-            # self.debug_string = self.debug_string + subject_json + '\n'
             if subject_json != None:
                 return [subject_json]
         elif self.base_element_type == 'experiment':
-            self.debug_string = self.debug_string + 'Reached Experiment Section\n'
-            self.debug_string = self.debug_string + 'Experiment Name: ' + self.experiment.id + '\n'
             experiment_json = self.create_experiment_structure(self.experiment)
-            # self.debug_string = self.debug_string + experiment_json + '\n'
             if experiment_json != None:
                 return experiment_json
 
@@ -187,7 +177,6 @@ class App:
 
     def create_experiment_structure(self, experiment):
         if experiment.__xsi_type__ == 'fnirs:fnirsSessionData':
-            self.debug_string = self.debug_string + 'Reached fNIRS section\n'
             experiment_has_fnirs_qc_data = False
             experiment_json = {}
             experiment_json['id'] = experiment.id
@@ -195,9 +184,7 @@ class App:
 
             scan_id_to_scan_json_dict = {}
             for scan in experiment.scans.values():
-                self.debug_string = self.debug_string + 'Scan: ' + scan.id + '\n'
                 if scan.__xsi_type__ == 'fnirs:fnirsScanData':
-                    self.debug_string = self.debug_string + 'Reached Scan fNIRS section\n'
                     scan_json = {}
                     scan_json['id'] = scan.id
                     scan_json['type'] = clean_scan_name_for_scan_type(scan.id)
@@ -205,7 +192,6 @@ class App:
                     scan_id_to_scan_json_dict[scan.id] = scan_json
 
             for assessor in experiment.assessors.values():
-                self.debug_string = self.debug_string + 'Assessor: ' + assessor.id + '\n'
                 scan_assessors = assessor.fulldata['children'][0]['items']
                 for scan_assessor in scan_assessors:
                     if scan_assessor['meta']['xsi:type'] != 'fnirs:fnirsQcScanData':
@@ -287,36 +273,25 @@ class App:
                 if st.session_state.filter_assessment_type and assessment_type not in st.session_state.filter_assessment_type:
                     continue
 
+                row_info = {}
                 if include_subject_elements:
-                    row_info = {
-                        'Subject ID': subject_id,
-                        'Subject Label': subject_label,
-                        'Experiment ID': experiment_id,
-                        'Experiment Label': experiment_label,
-                        'Scan ID': scan_id,
-                        'Scan Type': scan_type,
-                        'Rater': rater,
-                        'Assessment Date': assessment_date,
-                        'Assessment': assessment_type,
-                        'Score': score
-                    }
-                else:
-                    row_info = {
-                        'Experiment ID': experiment_id,
-                        'Experiment Label': experiment_label,
-                        'Scan ID': scan_id,
-                        'Scan Type': scan_type,
-                        'Rater': rater,
-                        'Assessment Date': assessment_date,
-                        'Assessment': assessment_type,
-                        'Score': score
-                    }
+                    row_info['Subject ID'] = subject_id
+                    row_info['Subject Label'] = subject_label,                    
+                
+                row_info['Experiment ID'] = experiment_id,
+                row_info['Experiment Label'] = experiment_label,
+                row_info['Scan ID'] = scan_id,
+                row_info['Scan Type'] = scan_type,
+                row_info['Rater'] =  rater,
+                row_info['Assessment Date'] = assessment_date,
+                row_info['Assessment'] = assessment_type,
+                row_info['Score'] = score
                 list_of_csv_elements.append(row_info)
         return list_of_csv_elements
 
 def clean_scan_name_for_scan_type(scan_name):
-        non_letters_removed = re.sub(r'[^\w]|[\d_]', '', scan_name)
-        scan_substring_removed = re.sub(r'scan', '', non_letters_removed, flags=re.IGNORECASE)
-        return scan_substring_removed
+    non_letters_removed = re.sub(r'[^\w]|[\d_]', '', scan_name)
+    scan_substring_removed = re.sub(r'scan', '', non_letters_removed, flags=re.IGNORECASE)
+    return scan_substring_removed
 
 app = App()
