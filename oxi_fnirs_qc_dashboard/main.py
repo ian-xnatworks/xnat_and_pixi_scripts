@@ -247,7 +247,7 @@ class App:
 
         if self.base_element_type == 'project' or self.base_element_type == 'subject':
             for subject in json_list:
-                if self.base_element_type == 'subject' and st.session_state.limit_to_subjects and subject['label'] not in st.session_state.subject_labels:
+                if self.base_element_type == 'project' and st.session_state.limit_to_subjects and subject['label'] not in st.session_state.subject_labels:
                     continue
 
                 subject_id = subject['id']
