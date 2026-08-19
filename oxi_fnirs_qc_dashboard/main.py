@@ -106,7 +106,7 @@ class App:
                     st.multiselect("Filter Experiments", st.session_state.experiment_labels, default=[], help='Set which experiments will be used to make the output.',key='filter_experiments', disabled=st.session_state.get("experiment_filter_on", True))
 
                 st.multiselect("Filter Assessment Type", ['lightFalloff', 'pulseSnr', 'pulsatility', 'motion', 'mapQuality'], default=[], help='Choose to only include certain assessment types in the report.',key='filter_assessment_type')
-
+                st.checkbox("One Assessment Per Rater", help='Set to true if duplicate ratings of the same scan by the same user should be removed.', value = True, key= 'remove_duplicate_ratings')
                 st.checkbox("Filter Date", help='Set to true if you wish to filter assessments based on their date.', key= 'filter_date', on_change=self.enable_disable_datetime_filter)
                 st.date_input("Date range start", datetime.today(), help='Beginning of date range to filter assessments.', key='assessment_date_range_start', disabled=st.session_state.get("datetimes_disabled", True))
                 st.date_input("Date range end", datetime.today(), help='End of date range to filter assessments.', key='assessment_date_range_end', disabled=st.session_state.get("datetimes_disabled", True))
