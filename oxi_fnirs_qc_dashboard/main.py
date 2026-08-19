@@ -9,6 +9,7 @@ import xnat
 import csv
 import argparse
 import json
+from dateutil import parser
 from datetime import datetime
 
 css='''
@@ -29,7 +30,6 @@ class App:
         self.experiment_id = experiment_id or (os.environ.get('XNAT_ITEM_ID') if os.environ.get('XNAT_XSI_TYPE') == 'xnat:experimentData' else None)
         self.connection = xnat.connect(self.host, user=self.user, password=self.password)
 
-        self.debug_string = ''
         self.base_element_type = ''
         if self.project_id:
             try: 
@@ -107,7 +107,7 @@ class App:
                     st.multiselect("Filter Experiments", st.session_state.experiment_labels, default=[], help='Set which experiments will be used to make the output.',key='filter_experiments', disabled=st.session_state.get("experiment_filter_on", True))
 
                 st.multiselect("Filter Assessment Type", ['lightFalloff', 'pulseSnr', 'pulsatility', 'motion', 'mapQuality'], default=[], help='Choose to only include certain assessment types in the report.',key='filter_assessment_type')
-
+                st.checkbox("One Assessment Per Rater", help='Set to true if duplicate ratings of the same scan by the same user should be removed.', value = True, key= 'remove_duplicate_ratings')
                 st.checkbox("Filter Date", help='Set to true if you wish to filter assessments based on their date.', key= 'filter_date', on_change=self.enable_disable_datetime_filter)
                 st.date_input("Date range start", datetime.today(), help='Beginning of date range to filter assessments.', key='assessment_date_range_start', disabled=st.session_state.get("datetimes_disabled", True))
                 st.date_input("Date range end", datetime.today(), help='End of date range to filter assessments.', key='assessment_date_range_end', disabled=st.session_state.get("datetimes_disabled", True))
@@ -136,30 +136,21 @@ class App:
 
     def create_full_structure_json(self):
         if self.base_element_type == 'project':
-            self.debug_string = self.debug_string + 'Reached Project Section\n'
             subjects = self.project.subjects.values()
             subject_json_list = []
 
             for subject in subjects:
-                self.debug_string = self.debug_string + 'Subject Name: ' + subject.id + '\n'
                 subject_json = self.create_subject_sctructure(subject)
-                self.debug_string = self.debug_string + subject_json + '\n'
                 if subject_json != None:
                     subject_json_list.append(subject_json)
 
             return subject_json_list
         elif self.base_element_type == 'subject':
-            self.debug_string = self.debug_string + 'Reached Subject Section\n'
-            self.debug_string = self.debug_string + 'Subject Name: ' + self.subject.id + '\n'
             subject_json = self.create_subject_sctructure(self.subject)
-            # self.debug_string = self.debug_string + subject_json + '\n'
             if subject_json != None:
                 return [subject_json]
         elif self.base_element_type == 'experiment':
-            self.debug_string = self.debug_string + 'Reached Experiment Section\n'
-            self.debug_string = self.debug_string + 'Experiment Name: ' + self.experiment.id + '\n'
             experiment_json = self.create_experiment_structure(self.experiment)
-            # self.debug_string = self.debug_string + experiment_json + '\n'
             if experiment_json != None:
                 return experiment_json
 
@@ -187,7 +178,6 @@ class App:
 
     def create_experiment_structure(self, experiment):
         if experiment.__xsi_type__ == 'fnirs:fnirsSessionData':
-            self.debug_string = self.debug_string + 'Reached fNIRS section\n'
             experiment_has_fnirs_qc_data = False
             experiment_json = {}
             experiment_json['id'] = experiment.id
@@ -195,9 +185,7 @@ class App:
 
             scan_id_to_scan_json_dict = {}
             for scan in experiment.scans.values():
-                self.debug_string = self.debug_string + 'Scan: ' + scan.id + '\n'
                 if scan.__xsi_type__ == 'fnirs:fnirsScanData':
-                    self.debug_string = self.debug_string + 'Reached Scan fNIRS section\n'
                     scan_json = {}
                     scan_json['id'] = scan.id
                     scan_json['type'] = clean_scan_name_for_scan_type(scan.id)
@@ -205,7 +193,6 @@ class App:
                     scan_id_to_scan_json_dict[scan.id] = scan_json
 
             for assessor in experiment.assessors.values():
-                self.debug_string = self.debug_string + 'Assessor: ' + assessor.id + '\n'
                 scan_assessors = assessor.fulldata['children'][0]['items']
                 for scan_assessor in scan_assessors:
                     if scan_assessor['meta']['xsi:type'] != 'fnirs:fnirsQcScanData':
@@ -247,7 +234,7 @@ class App:
 
         if self.base_element_type == 'project' or self.base_element_type == 'subject':
             for subject in json_list:
-                if self.base_element_type == 'project' and st.session_state.limit_to_subjects and subject['label'] not in st.session_state.subject_labels:
+                if self.base_element_type == 'project' and st.session_state.limit_to_subjects and subject['label'] not in st.session_state.filter_subjects:
                     continue
 
                 subject_id = subject['id']
@@ -260,7 +247,7 @@ class App:
         return list_of_csv_elements
 
     def convert_experiment_into_csv(self, experiment, include_subject_elements, subject_id, subject_label):
-        if self.base_element_type != 'experiment' and st.session_state.limit_to_experiments and experiment['label'] not in st.session_state.experiment_labels:
+        if self.base_element_type != 'experiment' and st.session_state.limit_to_experiments and experiment['label'] not in st.session_state.filter_experiments:
             return []
 
         list_of_csv_elements = []
@@ -271,6 +258,8 @@ class App:
             scan_id = scan['id']
             scan_type = scan['type']
 
+            list_of_csv_element_for_scan = []
+
             for assessment in scan['assessments']:
                 rater = assessment['rater']
                 assessment_date = assessment['date']
@@ -280,43 +269,46 @@ class App:
                 if st.session_state.filter_date:
                     start_date = st.session_state.assessment_date_range_start
                     end_date = st.session_state.assessment_date_range_end
-                    assessment_date_datetime = datetime.strptime(assessment_date, '%Y-%m-%d').date()
+                    assessment_date_datetime = parser.parse(assessment_date).date()
                     if start_date > assessment_date_datetime or end_date < assessment_date_datetime:
                         continue
 
                 if st.session_state.filter_assessment_type and assessment_type not in st.session_state.filter_assessment_type:
                     continue
+                if st.session_state.remove_duplicate_ratings:
+                    overlapping_assessment = next(
+                        (assessment for assessment in list_of_csv_element_for_scan if assessment.get("Rater") == rater and assessment.get("Assessment") == assessment_type),
+                        None 
+                    )
 
+                    if overlapping_assessment != None:
+                        overlapping_assessment_datetime = parser.parse(overlapping_assessment['Assessment Date'])
+                        new_assessment_datetime = parser.parse(assessment_date)
+                        if overlapping_assessment_datetime > new_assessment_datetime:
+                            continue
+                        else:
+                            list_of_csv_element_for_scan.remove(overlapping_assessment)
+
+                row_info = {}
                 if include_subject_elements:
-                    row_info = {
-                        'Subject ID': subject_id,
-                        'Subject Label': subject_label,
-                        'Experiment ID': experiment_id,
-                        'Experiment Label': experiment_label,
-                        'Scan ID': scan_id,
-                        'Scan Type': scan_type,
-                        'Rater': rater,
-                        'Assessment Date': assessment_date,
-                        'Assessment': assessment_type,
-                        'Score': score
-                    }
-                else:
-                    row_info = {
-                        'Experiment ID': experiment_id,
-                        'Experiment Label': experiment_label,
-                        'Scan ID': scan_id,
-                        'Scan Type': scan_type,
-                        'Rater': rater,
-                        'Assessment Date': assessment_date,
-                        'Assessment': assessment_type,
-                        'Score': score
-                    }
-                list_of_csv_elements.append(row_info)
+                    row_info['Subject ID'] = subject_id
+                    row_info['Subject Label'] = subject_label                  
+                
+                row_info['Experiment ID'] = experiment_id
+                row_info['Experiment Label'] = experiment_label
+                row_info['Scan ID'] = scan_id
+                row_info['Scan Type'] = scan_type
+                row_info['Rater'] =  rater
+                row_info['Assessment Date'] = assessment_date
+                row_info['Assessment'] = assessment_type
+                row_info['Score'] = score
+                list_of_csv_element_for_scan.append(row_info)
+            list_of_csv_elements.extend(list_of_csv_element_for_scan)
         return list_of_csv_elements
 
 def clean_scan_name_for_scan_type(scan_name):
-        non_letters_removed = re.sub(r'[^\w]|[\d_]', '', scan_name)
-        scan_substring_removed = re.sub(r'scan', '', non_letters_removed, flags=re.IGNORECASE)
-        return scan_substring_removed
+    non_letters_removed = re.sub(r'[^\w]|[\d_]', '', scan_name)
+    scan_substring_removed = re.sub(r'scan', '', non_letters_removed, flags=re.IGNORECASE)
+    return scan_substring_removed
 
 app = App()
