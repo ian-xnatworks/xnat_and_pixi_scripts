@@ -188,6 +188,7 @@ class App:
 
     def create_experiment_structure(self, experiment):
         if experiment.__xsi_type__ == 'fnirs:fnirsSessionData':
+            self.debug_string = self.debug_string + 'Reached fNIRS section\n'
             experiment_has_fnirs_qc_data = False
             experiment_json = {}
             experiment_json['id'] = experiment.id
@@ -195,7 +196,9 @@ class App:
 
             scan_id_to_scan_json_dict = {}
             for scan in experiment.scans.values():
+                self.debug_string = self.debug_string + 'Scan: ' + scan.id + '\n'
                 if scan.__xsi_type__ == 'fnirs:fnirsScanData':
+                    self.debug_string = self.debug_string + 'Reached Scan fNIRS section\n'
                     scan_json = {}
                     scan_json['id'] = scan.id
                     scan_json['type'] = clean_scan_name_for_scan_type(scan.id)
@@ -203,11 +206,13 @@ class App:
                     scan_id_to_scan_json_dict[scan.id] = scan_json
 
             for assessor in experiment.assessors.values():
+                self.debug_string = self.debug_string + 'Assessor: ' + assessor.id + '\n'
                 scan_assessors = assessor.fulldata['children'][0]['items']
                 for scan_assessor in scan_assessors:
                     if scan_assessor['meta']['xsi:type'] != 'fnirs:fnirsQcScanData':
                         continue
 
+                    self.debug_string = self.debug_string + 'Scan: ' + scan_assessor.id + '\n'
                     data_fields = scan_assessor['data_fields']
                     scan_json = scan_id_to_scan_json_dict[data_fields['imageScan_ID']]
                     
