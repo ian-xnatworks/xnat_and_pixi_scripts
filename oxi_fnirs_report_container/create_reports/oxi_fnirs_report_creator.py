@@ -189,4 +189,5 @@ json_list = create_full_structure_json(base_element_type, base_element)
 list_of_csv_elements = convert_json_into_csv(json_list, base_element_type)
 
 df = pd.DataFrame.from_dict(list_of_csv_elements)
-df.to_csv('out.csv', index=False)
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+df.to_csv(f"/fNIRS-qc-reports/fNIRS-report-{timestamp}.csv", index=False)
