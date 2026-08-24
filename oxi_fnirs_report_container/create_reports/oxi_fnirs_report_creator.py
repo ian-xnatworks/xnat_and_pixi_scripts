@@ -1,6 +1,8 @@
 import xnat
 import re
+import sys
 import json
+import logging
 import warnings
 import pandas as pd
 import argparse
@@ -166,28 +168,42 @@ def convert_experiment_into_csv(experiment, include_subject_elements, subject_id
 		list_of_csv_elements.extend(list_of_csv_element_for_scan)
 	return list_of_csv_elements
 
+if __name__ == "__main__":
 
-argparser = argparse.ArgumentParser()
-argparser.add_argument('--be', required=True, help='Base Element ID')
-argparser.add_argument('--type', required=True, help='Base Element Type')
-args = argparser.parse_args()
+	argparser = argparse.ArgumentParser()
+	argparser.add_argument('--be', required=True, help='Base Element ID')
+	argparser.add_argument('--type', required=True, help='Base Element Type')
+	argparser.add_argument('--out', type=str, help='output directory')
+	argparser.add_argument('--url', metavar='<str>', type=str, help='XNAT server')
+	argparser.add_argument('--u', metavar='<str>', type=str, help='XNAT username')
+	argparser.add_argument('--p', metavar='<str>', type=str, help='XNAT password')
+	args = argparser.parse_args()
 
-base_element_type = args.type
-base_element_id = args.be
+	base_element_type = args.type
+	base_element_id = args.be
+	outpur_directory = args.out
+	xnat_username = args.u
+	xnat_password = args.p
+	xnat_server_url = args.url
 
-connection = xnat.connect("https://ian-jupyterhub-dash-test.dev.xnatworks.io/", user="admin", password="admin")
+	connection = xnat.connect(xnat_server_url, user=xnat_username, password=xnat_password)
 
-base_element = None
-if base_element_type == 'project':
-	base_element = connection.projects[base_element_id]
-elif base_element_type == 'subject':
-	base_element = connection.subjects[base_element_id]
-elif base_element_type == 'experiment':
-	base_element = connection.experiments[base_element_id]
+	logging.basicConfig(handlers=[logging.StreamHandler(sys.stdout)],
+		level=logging.getLevelName('DEBUG'),
+		format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 
-json_list = create_full_structure_json(base_element_type, base_element)
-list_of_csv_elements = convert_json_into_csv(json_list, base_element_type)
+	base_element = None
+	if base_element_type == 'project':
+		base_element = connection.projects[base_element_id]
+	elif base_element_type == 'subject':
+		base_element = connection.subjects[base_element_id]
+	elif base_element_type == 'experiment':
+		base_element = connection.experiments[base_element_id]
 
-df = pd.DataFrame.from_dict(list_of_csv_elements)
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-df.to_csv(f"/fNIRS-qc-reports/fNIRS-report-{timestamp}.csv", index=False)
+	json_list = create_full_structure_json(base_element_type, base_element)
+	list_of_csv_elements = convert_json_into_csv(json_list, base_element_type)
+
+	df = pd.DataFrame.from_dict(list_of_csv_elements)
+	timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+	logging.debug(f"Csv saved to: {outpur_directory}/fNIRS-report-{timestamp}.csv")
+	df.to_csv(f"{outpur_directory}/fNIRS-report-{timestamp}.csv", index=False)

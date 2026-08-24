@@ -4,13 +4,14 @@
 	"description": "Amalgamate data and create a report based on fNIRS QC data",
 	"version": "0.1.0",
 	"schema-version": "1.0",
-	"info-url": "https://github.com/ian-xnatworks/xnat_and_pixi_scripts",
+	"info-url": "https://github.com/ian-xnatworks/xnat_and_pixi_scripts/oxi_fnirs_report_container",
+	"image": "radiologicsian/oxi-fnirs-report-container",
 	"container-name": "",
 	"type": "docker",
 	"index": "",
 	"working-directory": "/usr/src/app",
-	"command-line": "--u $XNAT_USER --p $XNAT_PASS --url $XNAT_HOST #ELEMENT_ID# #ELEMENT_TYPE#",
-	"override-entrypoint": false,
+	"command-line": "python oxi_fnirs_report_creator.py --out /output --u $XNAT_USER --p $XNAT_PASS --url $XNAT_HOST #ELEMENT_ID# #ELEMENT_TYPE#",
+	"override-entrypoint": true,
 	"mounts": [
 		{
 			"name": "input-mount",
@@ -20,7 +21,7 @@
 		{
 			"name": "output-mount",
 			"writable": true,
-			"path": "/fNIRS-qc-reports"
+			"path": "/output"
 		}
 	],
 	"environment-variables": {},
@@ -72,6 +73,8 @@
 	"xnat" : [
 		{
 		    "name": "project-level",
+		    "label": "Project Level",
+		    "description": "Create a report of all fNIRS data within a project",
 		    "contexts": ["xnat:projectData"],
 		    "external-inputs": [
 		        {
@@ -88,8 +91,24 @@
 					"provides-files-for-command-mount": null,
 					"via-setup-command": null,
 				    "user-settable": null,
-				    "load-children": true
-		        }
+				    "load-children": false
+		        },
+		        {
+				    "name": "element-type-value",
+				    "label": null,
+				    "description": "The type of the input element",
+				    "type": "string",
+				    "matcher": null,
+				    "default-value": "project",
+				    "required": true,
+				    "replacement-key": null,
+		            "sensitive": null,
+				    "provides-value-for-command-input": "element_type",
+		            "provides-files-for-command-mount": null,
+		            "via-setup-command": null,
+		            "multiple": false,
+		            "parser": null
+				}
 		    ],
 		    "derived-inputs": [
 		        {
@@ -113,10 +132,20 @@
 		            "parser": null
 		        }
 		    ],
-		    "output-handlers": []
+		    "output-handlers": [
+                {
+                    "name": "project-report-output",
+                    "accepts-command-output": "output",
+                    "as-a-child-of-wrapper-input": "project",
+                    "type": "Resource",
+                    "label": "OXI_fNIRS_Report"
+                }
+            ]
 		},
 		{
 		    "name": "subject-level",
+		    "label": "Subject Level",
+		    "description": "Create a report of all fNIRS data within a subject",
 		    "contexts": ["xnat:subjectData"],
 		    "external-inputs": [
 		        {
@@ -133,8 +162,24 @@
 					"provides-files-for-command-mount": null,
 					"via-setup-command": null,
 				    "user-settable": null,
-				    "load-children": true
-		        }
+				    "load-children": false
+		        },
+		        {
+				    "name": "element-type-value",
+				    "label": null,
+				    "description": "The type of the input element",
+				    "type": "string",
+				    "matcher": null,
+				    "default-value": "subject",
+				    "required": true,
+				    "replacement-key": null,
+		            "sensitive": null,
+				    "provides-value-for-command-input": "element_type",
+		            "provides-files-for-command-mount": null,
+		            "via-setup-command": null,
+		            "multiple": false,
+		            "parser": null
+				}
 		    ],
 		    "derived-inputs": [
 		        {
@@ -158,10 +203,20 @@
 		            "parser": null
 		        }
 		    ],
-		    "output-handlers": []
+		    "output-handlers": [
+                {
+                    "name": "subject-report-output",
+                    "accepts-command-output": "output",
+                    "as-a-child-of-wrapper-input": "subject",
+                    "type": "Resource",
+                    "label": "OXI_fNIRS_Report"
+                }
+            ]
 		},
 		{
 		    "name": "experiment-level",
+		    "label": "Experiment Level",
+		    "description": "Create a report of all fNIRS data within an image session",
 		    "contexts": ["xnat:imageSessionData"],
 		    "external-inputs": [
 		        {
@@ -178,8 +233,24 @@
 					"provides-files-for-command-mount": null,
 					"via-setup-command": null,
 				    "user-settable": null,
-				    "load-children": true
-		        }
+				    "load-children": false
+		        },
+		        {
+				    "name": "element-type-value",
+				    "label": null,
+				    "description": "The type of the input element",
+				    "type": "string",
+				    "matcher": null,
+				    "default-value": "experiment",
+				    "required": true,
+				    "replacement-key": null,
+		            "sensitive": null,
+				    "provides-value-for-command-input": "element_type",
+		            "provides-files-for-command-mount": null,
+		            "via-setup-command": null,
+		            "multiple": false,
+		            "parser": null
+				}
 		    ],
 		    "derived-inputs": [
 		        {
@@ -203,7 +274,15 @@
 		            "parser": null
 		        }
 		    ],
-		    "output-handlers": []
+		    "output-handlers": [
+                {
+                    "name": "session-report-output",
+                    "accepts-command-output": "output",
+                    "as-a-child-of-wrapper-input": "session",
+                    "type": "Resource",
+                    "label": "OXI_fNIRS_Report"
+                }
+            ]
 		}
 	],
 	"runtime": "",
