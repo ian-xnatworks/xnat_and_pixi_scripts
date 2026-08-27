@@ -171,6 +171,13 @@ def convert_experiment_into_csv(type_to_csv_elements, experiment, include_subjec
 			else:
 				type_to_csv_elements[type] = [row_info]
 
+def delete_old_csv_elements(base_element, output_directory):
+	resources = base_element.resources
+
+	for resource in resources:
+		if resource.label == output_directory:
+			resource.delete()
+
 if __name__ == "__main__":
 
 	argparser = argparse.ArgumentParser()
@@ -184,7 +191,7 @@ if __name__ == "__main__":
 
 	base_element_type = args.type
 	base_element_id = args.be
-	outpur_directory = args.out
+	output_directory = args.out
 	xnat_username = args.u
 	xnat_password = args.p
 	xnat_server_url = args.url
@@ -206,8 +213,10 @@ if __name__ == "__main__":
 	json_list, list_of_raters = create_full_structure_json(base_element_type, base_element)
 	type_to_csv_elements = convert_json_into_csv(json_list, base_element_type, list_of_raters)
 
+	delete_old_csv_elements(base_element, output_directory)
+
 	for type in type_to_csv_elements.keys():
 		csv_elements = type_to_csv_elements[type]
 		df = pd.DataFrame.from_dict(csv_elements)
-		logging.debug(f"Csv saved to: {outpur_directory}/fNIRS-report-{type}.csv")
-		df.to_csv(f"{outpur_directory}/fNIRS-report-{type}.csv", index=False)
+		logging.debug(f"Csv saved to: {output_directory}/fNIRS-report-{type}.csv")
+		df.to_csv(f"{output_directory}/fNIRS-report-{type}.csv", index=False)
